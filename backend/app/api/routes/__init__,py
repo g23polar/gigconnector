@@ -1,0 +1,2 @@
+# Intentionally minimal.
+# Routers are imported directly in app/main.py for clarity and explicit wiring.
