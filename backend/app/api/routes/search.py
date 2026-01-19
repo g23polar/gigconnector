@@ -35,7 +35,6 @@ def haversine_miles(lat1: float, lng1: float, lat2_col, lng2_col):
 @router.get("/artists")
 def search_artists(
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
     genres: list[str] = Query(default=[]),
     min_draw: int | None = None,
     max_rate: int | None = None,
@@ -104,7 +103,6 @@ def search_artists(
 @router.get("/venues")
 def search_venues(
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
     genres: list[str] = Query(default=[]),
     min_capacity: int | None = None,
     budget_max: int | None = None,
