@@ -108,6 +108,10 @@ export default function ProfileVenue() {
       setErr("Venue name is required.");
       return;
     }
+    if (!model.address.trim()) {
+      setErr("Address is required.");
+      return;
+    }
     if (!model.city.trim() || !model.state.trim()) {
       setErr("City and state are required.");
       return;
