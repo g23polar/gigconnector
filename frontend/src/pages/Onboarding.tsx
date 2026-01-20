@@ -132,7 +132,7 @@ export default function Onboarding() {
                     </div>
 
                     <div className="smallMuted">
-                      Rate: {artist.min_rate}–{artist.max_rate} • Draw: {artist.min_draw}–{artist.max_draw} • Travel:{" "}
+                      Rate: {artist.min_rate}–{artist.max_rate} • Travel:{" "}
                       {artist.travel_radius_miles} mi
                     </div>
                   </div>

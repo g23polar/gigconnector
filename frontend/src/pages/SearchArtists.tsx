@@ -33,8 +33,6 @@ type ArtistResult = {
   state: string;
   min_rate: number;
   max_rate: number;
-  min_draw: number;
-  max_draw: number;
   genres: string[];
   media_links: Record<string, unknown>;
   distance_miles?: number | null;
@@ -60,7 +58,6 @@ export default function SearchArtists() {
   const [genres, setGenres] = useState<string[]>(() => parseGenresParam(params));
   const [zipCode, setZipCode] = useState(params.get("zip_code") ?? "");
   const [distance, setDistance] = useState(params.get("distance_miles") ?? "25");
-  const [minDraw, setMinDraw] = useState(params.get("min_draw") ?? "");
   const [maxRate, setMaxRate] = useState(params.get("max_rate") ?? "");
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const genreDropdownRef = useRef<HTMLDivElement>(null);
@@ -75,7 +72,6 @@ export default function SearchArtists() {
   const url = useMemo(() => {
     const p = new URLSearchParams();
     genres.forEach((g) => p.append("genres", g));
-    if (minDraw) p.set("min_draw", minDraw);
     if (maxRate) p.set("max_rate", maxRate);
 
     // distance filters only if we have zip code
@@ -85,14 +81,13 @@ export default function SearchArtists() {
       p.set("sort", "distance");
     }
     return `/search/artists?${p.toString()}`;
-  }, [genres, zipCode, distance, minDraw, maxRate]);
+  }, [genres, zipCode, distance, maxRate]);
 
   const syncUrl = () => {
     const p = new URLSearchParams();
     genres.forEach((g) => p.append("genres", g));
     if (zipCode) p.set("zip_code", zipCode);
     if (distance) p.set("distance_miles", distance);
-    if (minDraw) p.set("min_draw", minDraw);
     if (maxRate) p.set("max_rate", maxRate);
     setParams(p, { replace: true });
   };
@@ -220,9 +215,6 @@ export default function SearchArtists() {
           </Field>
 
           <div className="grid2" style={{ gridColumn: "1 / -1" }}>
-            <Field label="Min draw">
-              <input className="input" value={minDraw} onChange={(e) => setMinDraw(e.target.value)} />
-            </Field>
             <Field label="Max rate">
               <input className="input" value={maxRate} onChange={(e) => setMaxRate(e.target.value)} />
             </Field>
@@ -270,7 +262,7 @@ export default function SearchArtists() {
                   </div>
 
                   <div className="smallMuted" style={{ marginTop: 10 }}>
-                    Rate: {a.min_rate}–{a.max_rate} • Draw: {a.min_draw}–{a.max_draw}
+                    Rate: {a.min_rate}–{a.max_rate}
                   </div>
                 </div>
 
@@ -295,7 +287,7 @@ export default function SearchArtists() {
         <Panel>
           <div className="sectionTitle">No results</div>
           <p className="sectionDesc">
-            Try broader genres (e.g., <span className="kbd">rock, indie</span>), increase distance, or remove draw/rate constraints.
+            Try broader genres (e.g., <span className="kbd">rock, indie</span>), increase distance, or remove rate constraints.
           </p>
         </Panel>
       )}

@@ -259,14 +259,6 @@ export default function ProfileArtist() {
               </Field>
             </div>
 
-            <div className="grid2">
-              <Field label="Expected draw (min)">
-                <input className="input" type="number" value={model.min_draw} onChange={(e) => setModel({ ...model, min_draw: Number(e.target.value) })} />
-              </Field>
-              <Field label="Expected draw (max)">
-                <input className="input" type="number" value={model.max_draw} onChange={(e) => setModel({ ...model, max_draw: Number(e.target.value) })} />
-              </Field>
-            </div>
           </div>
 
           <div className="btnRow">

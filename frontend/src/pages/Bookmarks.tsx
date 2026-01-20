@@ -19,8 +19,6 @@ type ArtistResult = {
   state: string;
   min_rate: number;
   max_rate: number;
-  min_draw: number;
-  max_draw: number;
   genres: string[];
 };
 
@@ -169,7 +167,7 @@ export default function Bookmarks() {
                             ))}
                           </div>
                           <div className="smallMuted" style={{ marginTop: 10 }}>
-                            Rate: {a.min_rate}–{a.max_rate} • Draw: {a.min_draw}–{a.max_draw}
+                            Rate: {a.min_rate}–{a.max_rate}
                           </div>
                         </div>
                         <div className="btnRow" style={{ flexShrink: 0 }}>

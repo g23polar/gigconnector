@@ -87,8 +87,6 @@ export default function ArtistDetail() {
                 <div className="cardTitle">Commercials</div>
                 <div className="cardMeta" style={{ marginTop: 8 }}>
                   Rate: {item.min_rate}–{item.max_rate}
-                  <br />
-                  Draw: {item.min_draw}–{item.max_draw}
                 </div>
               </div>
 
