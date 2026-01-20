@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { isAuthed } from "../lib/auth";
 
@@ -5,6 +6,30 @@ export default function Home() {
   const artistNext = encodeURIComponent("/profile/artist");
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
+  const words = ["band", "venue"];
+  const [targetIndex, setTargetIndex] = useState(0);
+  const [displayWord, setDisplayWord] = useState("");
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setTargetIndex((i) => (i + 1) % words.length);
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, [words.length]);
+
+  useEffect(() => {
+    const target = words[targetIndex];
+    if (displayWord === target) return;
+
+    const shouldDelete = !target.startsWith(displayWord);
+    const next = shouldDelete
+      ? displayWord.slice(0, -1)
+      : target.slice(0, displayWord.length + 1);
+    const timeout = shouldDelete ? 70 : 120;
+
+    const timerId = setTimeout(() => setDisplayWord(next), timeout);
+    return () => clearTimeout(timerId);
+  }, [displayWord, targetIndex, words]);
 
   return (
     <div>
@@ -21,7 +46,11 @@ export default function Home() {
 
           <div className="homeHeadlineWrap">
             <h1 className="homeHeadline">LOOKING FOR</h1>
-            <h1 className="homeHeadline">A BAND?</h1>
+            <h1 className="homeHeadline">
+              A{" "}
+              <span className="typeWord">{displayWord || " "}</span>
+              <span className="typeCursor">|</span>?
+            </h1>
 
             <div className="homeSubHeadline">FIND YOUR BAND / VENUE</div>
 
