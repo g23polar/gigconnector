@@ -1,6 +1,12 @@
 import { getToken, setToken, setRole } from "./auth";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const DEFAULT_API_URL = "http://localhost:8000";
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_URL = rawApiUrl
+  ? /^(https?:)?\/\//.test(rawApiUrl)
+    ? rawApiUrl
+    : `https://${rawApiUrl}`
+  : DEFAULT_API_URL;
 
 type HttpMethod = "GET" | "POST" | "DELETE";
 

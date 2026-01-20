@@ -28,7 +28,7 @@ services:
         fromService:
           type: web
           name: gigconnecter-backend
-          property: url
+          property: host
 
 databases:
   - name: gigconnecter-db
