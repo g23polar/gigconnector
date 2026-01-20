@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
+import { getRole, getToken } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
@@ -15,6 +15,10 @@ export default function VenueDetail() {
   const [item, setItem] = useState<Venue | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [matchMsg, setMatchMsg] = useState<string | null>(null);
+  const [matchBusy, setMatchBusy] = useState(false);
+
+  const role = getRole();
 
   const endpoint = useMemo(() => `/venue-profile/${encodeURIComponent(venueId)}`, [venueId]);
 
@@ -35,6 +39,28 @@ export default function VenueDetail() {
       return;
     }
     await apiFetch(`/bookmarks?to_entity_type=venue&to_entity_id=${encodeURIComponent(venueId)}`, { method: "POST" });
+  };
+
+  const match = async () => {
+    if (role !== "artist") return;
+    const token = getToken();
+    if (!token) {
+      nav(`/login?next=${encodeURIComponent(`/venues/${venueId}`)}`);
+      return;
+    }
+    setMatchMsg(null);
+    setMatchBusy(true);
+    try {
+      const resp = await apiFetch<{ matched?: boolean }>(`/matches`, {
+        method: "POST",
+        body: { target_type: "venue", target_id: venueId },
+      });
+      setMatchMsg(resp.matched ? "Matched." : "Match request sent.");
+    } catch (e: any) {
+      setMatchMsg(e.message ?? "Match failed");
+    } finally {
+      setMatchBusy(false);
+    }
   };
 
   return (
@@ -67,8 +93,14 @@ export default function VenueDetail() {
 
               <div className="btnRow" style={{ flexShrink: 0 }}>
                 <Button variant="ghost" onClick={bookmark}>Bookmark</Button>
+                {role === "artist" && (
+                  <Button variant="primary" onClick={match} disabled={matchBusy}>
+                    {matchBusy ? "Matching..." : "Match"}
+                  </Button>
+                )}
               </div>
             </div>
+            {matchMsg && <div className="smallMuted">{matchMsg}</div>}
 
             {item.description && (
               <>

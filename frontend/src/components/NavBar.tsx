@@ -28,6 +28,13 @@ export default function NavBar() {
         )}
 
         <Link to="/bookmarks">Bookmarks</Link>
+        {isAuthed() && (
+          <>
+            <Link to="/matches">Matches</Link>
+            <Link to="/matches/incoming">Requests</Link>
+            <Link to="/matches/pending">Pending</Link>
+          </>
+        )}
 
         <div className="navRight">
           {isAuthed() ? (

@@ -13,6 +13,9 @@ import SearchVenues from "./pages/SearchVenues";
 import Bookmarks from "./pages/Bookmarks";
 import ArtistDetail from "./pages/ArtistDetail";
 import VenueDetail from "./pages/VenueDetail";
+import Matches from "./pages/Matches";
+import MatchIncoming from "./pages/MatchIncoming";
+import MatchPending from "./pages/MatchPending";
 
 export default function App() {
   return (
@@ -61,6 +64,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Bookmarks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/matches"
+          element={
+            <ProtectedRoute>
+              <Matches />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/matches/incoming"
+          element={
+            <ProtectedRoute>
+              <MatchIncoming />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/matches/pending"
+          element={
+            <ProtectedRoute>
+              <MatchPending />
             </ProtectedRoute>
           }
         />
