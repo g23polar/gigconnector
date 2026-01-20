@@ -178,6 +178,38 @@ def list_matches(db: Session = Depends(get_db), user=Depends(get_current_user)):
     return items
 
 
+@router.delete("")
+def delete_match(
+    payload: MatchCreateIn,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    if user.role == UserRole.artist and payload.target_type != "venue":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only unmatch with venues")
+    if user.role == UserRole.venue and payload.target_type != "artist":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only unmatch with artists")
+
+    if payload.target_type == "artist":
+        profile = db.get(ArtistProfile, payload.target_id)
+        if not profile:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
+        target_user_id = profile.user_id
+    else:
+        profile = db.get(VenueProfile, payload.target_id)
+        if not profile:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Venue not found")
+        target_user_id = profile.user_id
+
+    db.query(Match).filter(
+        Match.from_user_id == user.id, Match.to_user_id == target_user_id
+    ).delete(synchronize_session=False)
+    db.query(Match).filter(
+        Match.from_user_id == target_user_id, Match.to_user_id == user.id
+    ).delete(synchronize_session=False)
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/incoming", response_model=list[MatchOut])
 def list_incoming(db: Session = Depends(get_db), user=Depends(get_current_user)):
     items: list[MatchOut] = []

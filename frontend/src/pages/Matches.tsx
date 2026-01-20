@@ -18,6 +18,7 @@ export default function Matches() {
   const [items, setItems] = useState<MatchItem[]>([]);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [unmatching, setUnmatching] = useState<string | null>(null);
 
   const load = async () => {
     setErr(null);
@@ -36,6 +37,22 @@ export default function Matches() {
   useEffect(() => {
     load();
   }, []);
+
+  const unmatch = async (item: MatchItem) => {
+    setUnmatching(item.id);
+    setErr(null);
+    try {
+      await apiFetch(`/matches`, {
+        method: "DELETE",
+        body: { target_type: item.target_type, target_id: item.target_id },
+      });
+      setItems((prev) => prev.filter((m) => m.id !== item.id));
+    } catch (e: any) {
+      setErr(e.message ?? "Failed to unmatch");
+    } finally {
+      setUnmatching(null);
+    }
+  };
 
   return (
     <div className="container" style={{ maxWidth: 980 }}>
@@ -67,6 +84,15 @@ export default function Matches() {
                       <Tag>{m.target_type === "artist" ? "Artist" : "Venue"}</Tag>
                     </div>
                     <div className="cardMeta">{m.city}, {m.state}</div>
+                  </div>
+                  <div className="btnRow" style={{ flexShrink: 0 }}>
+                    <button
+                      className="btn btnGhost"
+                      onClick={() => unmatch(m)}
+                      disabled={unmatching === m.id}
+                    >
+                      {unmatching === m.id ? "Unmatching..." : "Unmatch"}
+                    </button>
                   </div>
                 </div>
               </Card>
