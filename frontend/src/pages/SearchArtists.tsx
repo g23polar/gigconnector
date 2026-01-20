@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
@@ -7,6 +7,24 @@ import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
+
+const POPULAR_GENRES = [
+  "Rock",
+  "Pop",
+  "Hip Hop",
+  "R&B",
+  "Country",
+  "Jazz",
+  "Blues",
+  "Electronic",
+  "Folk",
+  "Metal",
+  "Punk",
+  "Indie",
+  "Classical",
+  "Reggae",
+  "Latin",
+] as const;
 
 type ArtistResult = {
   id: string;
@@ -26,17 +44,26 @@ function csvToList(v: string) {
   return v.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+function parseGenresParam(params: URLSearchParams) {
+  const all = params.getAll("genres");
+  if (all.length > 0) return all.flatMap((g) => csvToList(g));
+  const raw = params.get("genres") ?? "";
+  return csvToList(raw);
+}
+
 export default function SearchArtists() {
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const { msg, show } = useToast();
 
   // Initialize from URL (shareable / refresh-safe)
-  const [genres, setGenres] = useState(params.get("genres") ?? "");
+  const [genres, setGenres] = useState<string[]>(() => parseGenresParam(params));
   const [zipCode, setZipCode] = useState(params.get("zip_code") ?? "");
   const [distance, setDistance] = useState(params.get("distance_miles") ?? "25");
   const [minDraw, setMinDraw] = useState(params.get("min_draw") ?? "");
   const [maxRate, setMaxRate] = useState(params.get("max_rate") ?? "");
+  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const genreDropdownRef = useRef<HTMLDivElement>(null);
 
   const [items, setItems] = useState<ArtistResult[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -47,7 +74,7 @@ export default function SearchArtists() {
 
   const url = useMemo(() => {
     const p = new URLSearchParams();
-    csvToList(genres).forEach((g) => p.append("genres", g));
+    genres.forEach((g) => p.append("genres", g));
     if (minDraw) p.set("min_draw", minDraw);
     if (maxRate) p.set("max_rate", maxRate);
 
@@ -62,7 +89,7 @@ export default function SearchArtists() {
 
   const syncUrl = () => {
     const p = new URLSearchParams();
-    p.set("genres", genres);
+    genres.forEach((g) => p.append("genres", g));
     if (zipCode) p.set("zip_code", zipCode);
     if (distance) p.set("distance_miles", distance);
     if (minDraw) p.set("min_draw", minDraw);
@@ -91,6 +118,16 @@ export default function SearchArtists() {
     // Auto-run once on load with URL params
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (genreDropdownRef.current && !genreDropdownRef.current.contains(e.target as Node)) {
+        setGenreDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const bookmark = async (id: string) => {
@@ -123,8 +160,43 @@ export default function SearchArtists() {
         {err && <div className="error" style={{ marginBottom: 12 }}>{err}</div>}
 
         <div className="grid2" style={{ alignItems: "end" }}>
-          <Field label="Genres" hint="Comma-separated (e.g., rock, indie)">
-            <input className="input" value={genres} onChange={(e) => setGenres(e.target.value)} />
+          <Field label="Genres" hint="Select all that apply">
+            <div className="genreDropdown" ref={genreDropdownRef}>
+              <button
+                type="button"
+                className="genreDropdownTrigger"
+                onClick={() => setGenreDropdownOpen(!genreDropdownOpen)}
+              >
+                <span>
+                  {genres.length === 0
+                    ? "Select genres..."
+                    : genres.length === 1
+                    ? genres[0]
+                    : `${genres.length} genres selected`}
+                </span>
+                <span className="genreDropdownArrow">{genreDropdownOpen ? "▲" : "▼"}</span>
+              </button>
+              {genreDropdownOpen && (
+                <div className="genreDropdownMenu">
+                  {POPULAR_GENRES.map((genre) => (
+                    <label key={genre} className="genreDropdownItem">
+                      <input
+                        type="checkbox"
+                        checked={genres.includes(genre)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setGenres([...genres, genre]);
+                          } else {
+                            setGenres(genres.filter((g) => g !== genre));
+                          }
+                        }}
+                      />
+                      {genre}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </Field>
 
           <div className="btnRow" style={{ justifyContent: "flex-end" }}>
