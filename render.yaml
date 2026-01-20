@@ -32,4 +32,4 @@ services:
 
 databases:
   - name: gigconnecter-db
-    plan: basic-1gb
+    plan: free
