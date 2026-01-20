@@ -27,14 +27,13 @@ export default function NavBar() {
           </>
         )}
 
-        <Link to="/onboarding">My Profile</Link>
         <Link to="/bookmarks">Bookmarks</Link>
 
         <div className="navRight">
           {isAuthed() ? (
-            <button className="btn btnGhost" onClick={logout}>
+        <><Link to="/onboarding">My Profile</Link><button className="btn btnGhost" onClick={logout}>
               Logout
-            </button>
+            </button></>
           ) : (
             <Link className="btn btnGhost" to="/login">
               Login
