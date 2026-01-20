@@ -7,6 +7,7 @@ export type Artist = {
   city: string;
   state: string;
   country: string;
+  zip_code?: string | null;
   travel_radius_miles: number;
   min_rate: number;
   max_rate: number;
@@ -20,9 +21,11 @@ export type Venue = {
   id: string;
   venue_name: string;
   description: string;
+  address: string;
   city: string;
   state: string;
   country: string;
+  zip_code?: string | null;
   capacity: number;
   min_budget: number;
   max_budget: number;

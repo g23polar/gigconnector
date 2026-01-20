@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getBrowserLocation } from "../lib/useGeo";
+import { getToken } from "../lib/auth";
+import { useToast } from "../lib/useToast";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
-import { useNavigate } from "react-router-dom";
-import { getToken } from "../lib/auth";
-
-
 
 type VenueResult = {
   id: string;
@@ -23,102 +21,132 @@ type VenueResult = {
   distance_miles?: number | null;
 };
 
+function csvToList(v: string) {
+  return v
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export default function SearchVenues() {
-
   const nav = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const { msg, show } = useToast();
 
-  const [genres, setGenres] = useState("rock");
-  const [lat, setLat] = useState<string>("40.7128");
-  const [lng, setLng] = useState<string>("-74.0060");
-  const [distance, setDistance] = useState<string>("25");
-  const [minCapacity, setMinCapacity] = useState<string>("");
-  const [budgetMax, setBudgetMax] = useState<string>("");
+  // Initialize from URL (shareable / refresh-safe)
+  const [genres, setGenres] = useState(params.get("genres") ?? "");
+  const [zipCode, setZipCode] = useState(params.get("zip_code") ?? "");
+  const [distance, setDistance] = useState(params.get("distance_miles") ?? "25");
+  const [minCapacity, setMinCapacity] = useState(params.get("min_capacity") ?? "");
+  const [budgetMax, setBudgetMax] = useState(params.get("budget_max") ?? "");
 
   const [items, setItems] = useState<VenueResult[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const isAuthed = !!getToken();
 
   const url = useMemo(() => {
-    const params = new URLSearchParams();
-    genres.split(",").map((s) => s.trim()).filter(Boolean).forEach((g) => params.append("genres", g));
-    if (minCapacity) params.set("min_capacity", minCapacity);
-    if (budgetMax) params.set("budget_max", budgetMax);
-    if (distance && lat && lng) {
-      params.set("distance_miles", distance);
-      params.set("lat", lat);
-      params.set("lng", lng);
-      params.set("sort", "distance");
+    const p = new URLSearchParams();
+    csvToList(genres).forEach((g) => p.append("genres", g));
+
+    if (minCapacity) p.set("min_capacity", minCapacity);
+    if (budgetMax) p.set("budget_max", budgetMax);
+
+    // distance filters only if we have zip code
+    if (distance && zipCode) {
+      p.set("distance_miles", distance);
+      p.set("zip_code", zipCode);
+      p.set("sort", "distance");
     }
-    return `/search/venues?${params.toString()}`;
-  }, [genres, lat, lng, distance, minCapacity, budgetMax]);
+    return `/search/venues?${p.toString()}`;
+  }, [genres, zipCode, distance, minCapacity, budgetMax]);
+
+  const syncUrl = () => {
+    const p = new URLSearchParams();
+    p.set("genres", genres);
+    if (zipCode) p.set("zip_code", zipCode);
+    if (distance) p.set("distance_miles", distance);
+    if (minCapacity) p.set("min_capacity", minCapacity);
+    if (budgetMax) p.set("budget_max", budgetMax);
+    setParams(p, { replace: true });
+  };
 
   const run = async () => {
     setErr(null);
     setBusy(true);
+    setHasSearched(true);
+    syncUrl();
+
     try {
-      const data = await apiFetch<VenueResult[]>(url);
+      const data = await apiFetch<VenueResult[]>(url, { auth: false });
       setItems(data);
     } catch (e: any) {
       setErr(e.message ?? "Search failed");
+      setItems([]);
     } finally {
       setBusy(false);
     }
   };
 
   useEffect(() => {
+    // Auto-run once on load with URL params
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const useMyLocation = async () => {
-    setErr(null);
+  const bookmark = async (id: string) => {
+    if (!isAuthed) {
+      show("Login to bookmark.");
+      return;
+    }
     try {
-      const pos = await getBrowserLocation();
-      setLat(pos.lat.toFixed(6));
-      setLng(pos.lng.toFixed(6));
+      await apiFetch(
+        `/bookmarks?to_entity_type=venue&to_entity_id=${encodeURIComponent(id)}`,
+        { method: "POST" }
+      );
+      show("Bookmarked.");
     } catch (e: any) {
-      setErr(e.message ?? "Failed to read location");
+      show(e.message ?? "Bookmark failed");
     }
   };
 
-  const bookmark = async (id: string) => {
-    const token = getToken();
-    if (!token) {
-      const next = encodeURIComponent(`/search/venues`);
-      nav(`/login?next=${next}`);
-      return;
-    }
-    await apiFetch(`/bookmarks?to_entity_type=venue&to_entity_id=${encodeURIComponent(id)}`, { method: "POST" });
+  const loginForBookmark = () => {
+    nav(`/login?next=${encodeURIComponent("/search/venues?" + params.toString())}`);
   };
 
   return (
     <div className="container">
+      {msg && <div className="toast">{msg}</div>}
+
       <Panel>
         <div className="sectionTitle">Find venues</div>
         <p className="sectionDesc">
-          Filter by genre and optionally by proximity. Use <span className="kbd">Bookmark</span> to save candidates.
+          Filter by genre and proximity. Browse freely; login is only required to bookmark.
         </p>
 
         {err && <div className="error" style={{ marginBottom: 12 }}>{err}</div>}
 
         <div className="grid2" style={{ alignItems: "end" }}>
-          <Field label="Genres" hint="Comma-separated">
+          <Field label="Genres" hint="Comma-separated (e.g., rock, indie)">
             <input className="input" value={genres} onChange={(e) => setGenres(e.target.value)} />
           </Field>
 
           <div className="btnRow" style={{ justifyContent: "flex-end" }}>
-            <Button variant="ghost" onClick={useMyLocation}>Use my location</Button>
             <Button variant="primary" onClick={run} disabled={busy}>
               {busy ? "Searching..." : "Search"}
             </Button>
           </div>
 
-          <Field label="Latitude">
-            <input className="input" value={lat} onChange={(e) => setLat(e.target.value)} />
-          </Field>
-
-          <Field label="Longitude">
-            <input className="input" value={lng} onChange={(e) => setLng(e.target.value)} />
+          <Field label="Your Zip Code" hint="US zip code for distance filtering">
+            <input
+              className="input"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              placeholder="e.g., 10001"
+              maxLength={10}
+            />
           </Field>
 
           <Field label="Distance (miles)">
@@ -134,45 +162,77 @@ export default function SearchVenues() {
             </Field>
           </div>
         </div>
+
+        {!isAuthed && (
+          <div className="smallMuted" style={{ marginTop: 12 }}>
+            Want to save venues?{" "}
+            <button className="btn btnGhost" onClick={loginForBookmark}>
+              Login to bookmark
+            </button>
+          </div>
+        )}
       </Panel>
 
       <div style={{ height: 14 }} />
 
-      <div className="cardList">
-        {items.map((v) => (
-          <Card key={v.id}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-              <div style={{ minWidth: 0 }}>
-                <div className="cardTitle">{v.venue_name}</div>
-                <div className="cardMeta">
-                  {v.city}, {v.state}
-                  {v.distance_miles != null ? ` • ${v.distance_miles.toFixed(1)} mi` : ""}
+      {busy && (
+        <div className="smallMuted" style={{ padding: 8 }}>
+          Loading results…
+        </div>
+      )}
+
+      {!busy && items.length > 0 && (
+        <div className="cardList">
+          {items.map((v) => (
+            <Card key={v.id}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <div className="cardTitle">{v.venue_name}</div>
+                    <Link className="smallMuted" to={`/venues/${v.id}`}>View</Link>
+                  </div>
+
+                  <div className="cardMeta">
+                    {v.city}, {v.state}
+                    {v.distance_miles != null ? ` • ${v.distance_miles} mi` : ""}
+                  </div>
+
+                  <div className="pillRow">
+                    {v.genres.slice(0, 6).map((g) => (
+                      <Tag key={g}>{g}</Tag>
+                    ))}
+                  </div>
+
+                  <div className="smallMuted" style={{ marginTop: 10 }}>
+                    Capacity: {v.capacity} • Budget: {v.min_budget}–{v.max_budget}
+                  </div>
                 </div>
 
-                <div className="pillRow">
-                  {v.genres.slice(0, 6).map((g) => (
-                    <Tag key={g}>{g}</Tag>
-                  ))}
-                </div>
-
-                <div className="smallMuted" style={{ marginTop: 10 }}>
-                  Capacity: {v.capacity} • Budget: {v.min_budget}–{v.max_budget}
+                <div className="btnRow" style={{ flexShrink: 0 }}>
+                  <button
+                    className="btn btnGhost"
+                    onClick={() => bookmark(v.id)}
+                    disabled={!isAuthed}
+                    title={!isAuthed ? "Login to bookmark" : "Bookmark"}
+                    style={!isAuthed ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                  >
+                    Bookmark
+                  </button>
                 </div>
               </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
-              <div className="btnRow" style={{ flexShrink: 0 }}>
-                <Button variant="ghost" onClick={() => bookmark(v.id)}>Bookmark</Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        {!busy && items.length === 0 && (
-          <div className="smallMuted" style={{ padding: 8 }}>
-            No results. Try a broader genre or increase distance.
-          </div>
-        )}
-      </div>
+      {!busy && hasSearched && items.length === 0 && !err && (
+        <Panel>
+          <div className="sectionTitle">No results</div>
+          <p className="sectionDesc">
+            Try broader genres (e.g., <span className="kbd">rock, indie</span>), increase distance, or relax capacity/budget constraints.
+          </p>
+        </Panel>
+      )}
     </div>
   );
 }

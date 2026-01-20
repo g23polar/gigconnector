@@ -11,17 +11,25 @@ from app.schemas.artist import ArtistProfileIn, ArtistProfileOut
 router = APIRouter(prefix="/artist-profile", tags=["artist-profile"])
 
 
-@router.get("/{artist_id}", response_model=ArtistProfileOut)
-def get_artist_by_id(artist_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    prof = db.get(ArtistProfile, artist_id)
+@router.get("/me", response_model=ArtistProfileOut)
+def get_my_artist_profile(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    prof = db.query(ArtistProfile).filter(ArtistProfile.user_id == user.id).first()
     if not prof:
-        raise HTTPException(status_code=404, detail="Artist profile not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist profile not found")
+
     return ArtistProfileOut(
-        id=prof.id, name=prof.name, bio=prof.bio,
-        city=prof.city, state=prof.state, country=prof.country,
+        id=prof.id,
+        name=prof.name,
+        bio=prof.bio,
+        city=prof.city,
+        state=prof.state,
+        country=prof.country,
+        zip_code=prof.zip_code,
         travel_radius_miles=prof.travel_radius_miles,
-        min_rate=prof.min_rate, max_rate=prof.max_rate,
-        min_draw=prof.min_draw, max_draw=prof.max_draw,
+        min_rate=prof.min_rate,
+        max_rate=prof.max_rate,
+        min_draw=prof.min_draw,
+        max_draw=prof.max_draw,
         media_links=prof.media_links,
         genres=[g.name for g in prof.genres],
     )
@@ -54,9 +62,7 @@ def create_or_update_artist_profile(
     prof.max_draw = payload.max_draw
     prof.media_links = payload.media_links
 
-    prof.lat = payload.lat
-    prof.lng = payload.lng
-
+    prof.zip_code = payload.zip_code
 
     prof.genres = upsert_genres(db, payload.genre_names)
 
@@ -70,6 +76,7 @@ def create_or_update_artist_profile(
         city=prof.city,
         state=prof.state,
         country=prof.country,
+        zip_code=prof.zip_code,
         travel_radius_miles=prof.travel_radius_miles,
         min_rate=prof.min_rate,
         max_rate=prof.max_rate,
@@ -80,24 +87,18 @@ def create_or_update_artist_profile(
     )
 
 
-@router.get("/me", response_model=ArtistProfileOut)
-def get_my_artist_profile(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    prof = db.query(ArtistProfile).filter(ArtistProfile.user_id == user.id).first()
+@router.get("/{artist_id}", response_model=ArtistProfileOut)
+def get_artist_by_id(artist_id: str, db: Session = Depends(get_db)):
+    prof = db.get(ArtistProfile, artist_id)
     if not prof:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist profile not found")
-
+        raise HTTPException(status_code=404, detail="Artist profile not found")
     return ArtistProfileOut(
-        id=prof.id,
-        name=prof.name,
-        bio=prof.bio,
-        city=prof.city,
-        state=prof.state,
-        country=prof.country,
+        id=prof.id, name=prof.name, bio=prof.bio,
+        city=prof.city, state=prof.state, country=prof.country,
+        zip_code=prof.zip_code,
         travel_radius_miles=prof.travel_radius_miles,
-        min_rate=prof.min_rate,
-        max_rate=prof.max_rate,
-        min_draw=prof.min_draw,
-        max_draw=prof.max_draw,
+        min_rate=prof.min_rate, max_rate=prof.max_rate,
+        min_draw=prof.min_draw, max_draw=prof.max_draw,
         media_links=prof.media_links,
         genres=[g.name for g in prof.genres],
     )

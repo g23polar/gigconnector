@@ -1,10 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../lib/api";
 import type { Venue } from "../lib/types";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel } from "../ui/Card";
+
+const POPULAR_GENRES = [
+  "Rock",
+  "Pop",
+  "Hip Hop",
+  "R&B",
+  "Country",
+  "Jazz",
+  "Blues",
+  "Electronic",
+  "Folk",
+  "Metal",
+  "Punk",
+  "Indie",
+  "Classical",
+  "Reggae",
+  "Latin",
+] as const;
 
 type VenueIn = {
   venue_name: string;
@@ -13,8 +31,7 @@ type VenueIn = {
   city: string;
   state: string;
   country: string;
-  lat?: number | null;
-  lng?: number | null;
+  zip_code?: string | null;
   capacity: number;
   min_budget: number;
   max_budget: number;
@@ -30,8 +47,7 @@ export default function ProfileVenue() {
     city: "",
     state: "",
     country: "US",
-    lat: null,
-    lng: null,
+    zip_code: null,
     capacity: 0,
     min_budget: 0,
     max_budget: 0,
@@ -39,10 +55,23 @@ export default function ProfileVenue() {
     genre_names: [],
   });
 
-  const [genresText, setGenresText] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const genreDropdownRef = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (genreDropdownRef.current && !genreDropdownRef.current.contains(e.target as Node)) {
+        setGenreDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     apiFetch<Venue>(`/venue-profile/me`)
@@ -54,13 +83,14 @@ export default function ProfileVenue() {
           city: v.city,
           state: v.state,
           country: v.country,
+          zip_code: v.zip_code ?? null,
           capacity: v.capacity,
           min_budget: v.min_budget,
           max_budget: v.max_budget,
           amenities: v.amenities,
           genre_names: v.genres,
         }));
-        setGenresText(v.genres.join(", "));
+        setSelectedGenres(v.genres);
       })
       .catch(() => {});
   }, []);
@@ -83,10 +113,7 @@ export default function ProfileVenue() {
     try {
       const payload: VenueIn = {
         ...model,
-        genre_names: genresText
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        genre_names: selectedGenres,
       };
 
       await apiFetch(`/venue-profile`, { method: "POST", body: payload });
@@ -117,8 +144,43 @@ export default function ProfileVenue() {
                 <input className="input" value={model.venue_name} onChange={(e) => setModel({ ...model, venue_name: e.target.value })} />
               </Field>
 
-              <Field label="Genres" hint="Comma-separated (e.g., rock, indie, hip-hop)">
-                <input className="input" value={genresText} onChange={(e) => setGenresText(e.target.value)} />
+              <Field label="Genres" hint="Select all that apply">
+                <div className="genreDropdown" ref={genreDropdownRef}>
+                  <button
+                    type="button"
+                    className="genreDropdownTrigger"
+                    onClick={() => setGenreDropdownOpen(!genreDropdownOpen)}
+                  >
+                    <span>
+                      {selectedGenres.length === 0
+                        ? "Select genres..."
+                        : selectedGenres.length === 1
+                        ? selectedGenres[0]
+                        : `${selectedGenres.length} genres selected`}
+                    </span>
+                    <span className="genreDropdownArrow">{genreDropdownOpen ? "▲" : "▼"}</span>
+                  </button>
+                  {genreDropdownOpen && (
+                    <div className="genreDropdownMenu">
+                      {POPULAR_GENRES.map((genre) => (
+                        <label key={genre} className="genreDropdownItem">
+                          <input
+                            type="checkbox"
+                            checked={selectedGenres.includes(genre)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedGenres([...selectedGenres, genre]);
+                              } else {
+                                setSelectedGenres(selectedGenres.filter((g) => g !== genre));
+                              }
+                            }}
+                          />
+                          {genre}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </Field>
             </div>
 
@@ -131,7 +193,7 @@ export default function ProfileVenue() {
 
           <div>
             <div className="sectionTitle">Location</div>
-            <Field label="Address" hint="Optional — useful for context; distance filtering uses lat/lng.">
+            <Field label="Address" hint="Address is required.">
               <input className="input" value={model.address} onChange={(e) => setModel({ ...model, address: e.target.value })} />
             </Field>
 
@@ -144,24 +206,15 @@ export default function ProfileVenue() {
               </Field>
             </div>
 
-            <div className="grid2">
-              <Field label="Latitude" hint="Optional — used for distance filtering.">
-                <input
-                  className="input"
-                  type="number"
-                  value={model.lat ?? ""}
-                  onChange={(e) => setModel({ ...model, lat: e.target.value ? Number(e.target.value) : null })}
-                />
-              </Field>
-              <Field label="Longitude" hint="Optional — used for distance filtering.">
-                <input
-                  className="input"
-                  type="number"
-                  value={model.lng ?? ""}
-                  onChange={(e) => setModel({ ...model, lng: e.target.value ? Number(e.target.value) : null })}
-                />
-              </Field>
-            </div>
+            <Field label="Zip Code" hint="US zip code — used for distance filtering in search.">
+              <input
+                className="input"
+                value={model.zip_code ?? ""}
+                onChange={(e) => setModel({ ...model, zip_code: e.target.value || null })}
+                placeholder="e.g., 90210"
+                maxLength={10}
+              />
+            </Field>
           </div>
 
           <div className="divider" />

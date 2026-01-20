@@ -1,46 +1,234 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import type { Bookmark } from "../lib/types";
+import Button from "../ui/Button";
+import { Panel, Card } from "../ui/Card";
+import Tag from "../ui/Tag";
+
+type Bookmark = {
+  id: string;
+  to_entity_type: "artist" | "venue";
+  to_entity_id: string;
+  created_at?: string;
+};
+
+type ArtistResult = {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  min_rate: number;
+  max_rate: number;
+  min_draw: number;
+  max_draw: number;
+  genres: string[];
+};
+
+type VenueResult = {
+  id: string;
+  venue_name: string;
+  city: string;
+  state: string;
+  capacity: number;
+  min_budget: number;
+  max_budget: number;
+  genres: string[];
+};
+
+type Resolved =
+  | { kind: "artist"; bookmarkId: string; entityId: string; artist: ArtistResult | null }
+  | { kind: "venue"; bookmarkId: string; entityId: string; venue: VenueResult | null };
 
 export default function Bookmarks() {
-  const [items, setItems] = useState<Bookmark[]>([]);
+  const [raw, setRaw] = useState<Bookmark[]>([]);
+  const [resolved, setResolved] = useState<Resolved[]>([]);
+  const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+
+  const counts = useMemo(() => {
+    const a = raw.filter((b) => b.to_entity_type === "artist").length;
+    const v = raw.filter((b) => b.to_entity_type === "venue").length;
+    return { a, v, total: raw.length };
+  }, [raw]);
 
   const load = async () => {
     setErr(null);
+    setBusy(true);
     try {
-      const data = await apiFetch<Bookmark[]>(`/bookmarks`);
-      setItems(data);
+      const data = await apiFetch<Bookmark[]>("/bookmarks");
+      setRaw(data);
+
+      const mapped: Resolved[] = await Promise.all(
+        data.map(async (b) => {
+          try {
+            if (b.to_entity_type === "artist") {
+              const artist = await apiFetch<ArtistResult>(`/artist-profile/${encodeURIComponent(b.to_entity_id)}`, {
+                auth: false,
+              });
+              return { kind: "artist", bookmarkId: b.id, entityId: b.to_entity_id, artist };
+            } else {
+              const venue = await apiFetch<VenueResult>(`/venue-profile/${encodeURIComponent(b.to_entity_id)}`, {
+                auth: false,
+              });
+              return { kind: "venue", bookmarkId: b.id, entityId: b.to_entity_id, venue };
+            }
+          } catch {
+            // If entity was deleted or endpoint fails, keep bookmark but show placeholder
+            return b.to_entity_type === "artist"
+              ? { kind: "artist", bookmarkId: b.id, entityId: b.to_entity_id, artist: null }
+              : { kind: "venue", bookmarkId: b.id, entityId: b.to_entity_id, venue: null };
+          }
+        })
+      );
+
+      setResolved(mapped);
     } catch (e: any) {
       setErr(e.message ?? "Failed to load bookmarks");
+      setRaw([]);
+      setResolved([]);
+    } finally {
+      setBusy(false);
     }
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const remove = async (id: string) => {
-    await apiFetch(`/bookmarks/${id}`, { method: "DELETE" });
-    await load();
+  const remove = async (bookmarkId: string) => {
+    // optimistic remove
+    const prevRaw = raw;
+    const prevResolved = resolved;
+    setRaw((r) => r.filter((b) => b.id !== bookmarkId));
+    setResolved((r) => r.filter((x) => x.bookmarkId !== bookmarkId));
+
+    try {
+      await apiFetch(`/bookmarks/${encodeURIComponent(bookmarkId)}`, { method: "DELETE" });
+    } catch (e: any) {
+      // rollback
+      setRaw(prevRaw);
+      setResolved(prevResolved);
+      setErr(e.message ?? "Failed to remove bookmark");
+    }
   };
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Bookmarks</h2>
-      {err && <div style={{ color: "crimson" }}>{err}</div>}
-
-      <div style={{ display: "grid", gap: 10 }}>
-        {items.map((b) => (
-          <div key={b.id} style={{ border: "1px solid #ddd", padding: 12, display: "flex", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontWeight: 700 }}>{b.type.toUpperCase()}</div>
-              <div style={{ color: "#666" }}>Entity ID: {b.entity_id}</div>
+    <div className="container" style={{ maxWidth: 980 }}>
+      <Panel>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+          <div>
+            <div className="sectionTitle">Bookmarks</div>
+            <div className="smallMuted">
+              {counts.total} total • {counts.a} artists • {counts.v} venues
             </div>
-            <button onClick={() => remove(b.id)}>Remove</button>
           </div>
-        ))}
-      </div>
+          <div className="btnRow">
+            <Link className="btn" to="/search/venues">Search venues</Link>
+            <Link className="btn" to="/search/artists">Search artists</Link>
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        {busy && <div className="smallMuted">Loading…</div>}
+        {err && <div className="error" style={{ marginBottom: 12 }}>{err}</div>}
+
+        {!busy && resolved.length === 0 && !err && (
+          <Card>
+            <div className="cardTitle">No bookmarks yet</div>
+            <div className="cardMeta" style={{ marginTop: 6, marginBottom: 12 }}>
+              Browse and bookmark artists or venues to build a shortlist.
+            </div>
+            <div className="btnRow">
+              <Link className="btn" to="/search/venues">Browse venues</Link>
+              <Link className="btn" to="/search/artists">Browse artists</Link>
+            </div>
+          </Card>
+        )}
+
+        {!busy && resolved.length > 0 && (
+          <div className="cardList">
+            {resolved.map((x) => {
+              if (x.kind === "artist") {
+                const a = x.artist;
+                return (
+                  <Card key={x.bookmarkId}>
+                    {a ? (
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                            <div className="cardTitle">{a.name}</div>
+                            <Link className="smallMuted" to={`/artists/${a.id}`}>View</Link>
+                            <Tag>Artist</Tag>
+                          </div>
+                          <div className="cardMeta">{a.city}, {a.state}</div>
+                          <div className="pillRow">
+                            {a.genres.slice(0, 6).map((g) => (
+                              <Tag key={g}>{g}</Tag>
+                            ))}
+                          </div>
+                          <div className="smallMuted" style={{ marginTop: 10 }}>
+                            Rate: {a.min_rate}–{a.max_rate} • Draw: {a.min_draw}–{a.max_draw}
+                          </div>
+                        </div>
+                        <div className="btnRow" style={{ flexShrink: 0 }}>
+                          <Button variant="ghost" onClick={() => remove(x.bookmarkId)}>Remove</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                        <div>
+                          <div className="cardTitle">Artist (unavailable)</div>
+                          <div className="cardMeta">This profile may have been removed.</div>
+                        </div>
+                        <Button variant="ghost" onClick={() => remove(x.bookmarkId)}>Remove</Button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              }
+
+              const v = x.venue;
+              return (
+                <Card key={x.bookmarkId}>
+                  {v ? (
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                          <div className="cardTitle">{v.venue_name}</div>
+                          <Link className="smallMuted" to={`/venues/${v.id}`}>View</Link>
+                          <Tag>Venue</Tag>
+                        </div>
+                        <div className="cardMeta">{v.city}, {v.state}</div>
+                        <div className="pillRow">
+                          {v.genres.slice(0, 6).map((g) => (
+                            <Tag key={g}>{g}</Tag>
+                          ))}
+                        </div>
+                        <div className="smallMuted" style={{ marginTop: 10 }}>
+                          Capacity: {v.capacity} • Budget: {v.min_budget}–{v.max_budget}
+                        </div>
+                      </div>
+                      <div className="btnRow" style={{ flexShrink: 0 }}>
+                        <Button variant="ghost" onClick={() => remove(x.bookmarkId)}>Remove</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                      <div>
+                        <div className="cardTitle">Venue (unavailable)</div>
+                        <div className="cardMeta">This profile may have been removed.</div>
+                      </div>
+                      <Button variant="ghost" onClick={() => remove(x.bookmarkId)}>Remove</Button>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }

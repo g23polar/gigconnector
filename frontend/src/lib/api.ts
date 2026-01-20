@@ -1,4 +1,4 @@
-import { getToken, setToken } from "./auth";
+import { getToken, setToken, setRole } from "./auth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -46,6 +46,7 @@ export async function register(email: string, password: string, role: "artist" |
     body: { email, password, role },
   });
   setToken(resp.access_token);
+  setRole(role);
   return resp;
 }
 
@@ -63,6 +64,15 @@ export async function login(email: string, password: string) {
       body: { email, password },
     });
     setToken(resp.access_token);
+
+    // Fetch user role after login
+    try {
+      const me = await apiFetch<{ role: "artist" | "venue" }>(`/users/me`);
+      setRole(me.role);
+    } catch {
+      // If /users/me fails, role won't be set - that's ok
+    }
+
     return resp;
   } catch (e: any) {
     // fallback to form login
@@ -78,6 +88,15 @@ export async function login(email: string, password: string) {
     if (!res.ok) throw new Error(data?.detail ?? `Login failed: ${res.status}`);
 
     setToken(data.access_token);
+
+    // Fetch user role after login
+    try {
+      const me = await apiFetch<{ role: "artist" | "venue" }>(`/users/me`);
+      setRole(me.role);
+    } catch {
+      // If /users/me fails, role won't be set - that's ok
+    }
+
     return data as { access_token: string };
   }
 }

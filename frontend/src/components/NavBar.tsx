@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
-import { clearToken, isAuthed } from "../lib/auth";
+import { clearToken, getRole, isAuthed } from "../lib/auth";
 
 export default function NavBar() {
   const nav = useNavigate();
+  const role = getRole();
 
   const logout = () => {
     clearToken();
@@ -15,8 +16,17 @@ export default function NavBar() {
         <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
           Gig Connector
         </Link>
-        <Link to="/search/artists">Artists</Link>
-        <Link to="/search/venues">Venues</Link>
+
+        {/* Artists search for venues, venues search for artists */}
+        {role === "artist" && <Link to="/search/venues">Find Venues</Link>}
+        {role === "venue" && <Link to="/search/artists">Find Artists</Link>}
+        {!role && (
+          <>
+            <Link to="/search/artists">Artists</Link>
+            <Link to="/search/venues">Venues</Link>
+          </>
+        )}
+
         <Link to="/onboarding">My Profile</Link>
         <Link to="/bookmarks">Bookmarks</Link>
 

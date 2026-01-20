@@ -11,8 +11,7 @@ class ArtistProfileIn(BaseModel):
     state: str = ""
     country: str = "US"
 
-    lat: Optional[float] = None
-    lng: Optional[float] = None
+    zip_code: Optional[str] = None
 
     travel_radius_miles: int = 25
 
@@ -34,6 +33,7 @@ class ArtistProfileOut(BaseModel):
     city: str
     state: str
     country: str
+    zip_code: Optional[str] = None
 
     travel_radius_miles: int
 

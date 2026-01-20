@@ -1,8 +1,11 @@
+import math
+
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import Float, func, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db
+from app.core.zipcode import lookup_zipcode
 from app.models.artist import ArtistProfile
 from app.models.genre import Genre
 from app.models.venue import VenueProfile
@@ -13,34 +16,26 @@ router = APIRouter(prefix="/search", tags=["search"])
 EARTH_RADIUS_MI = 3958.7613
 
 
-def haversine_miles(lat1: float, lng1: float, lat2_col, lng2_col):
-    """
-    Returns a SQLAlchemy expression computing great-circle distance in miles.
-    Uses the spherical law of cosines (sufficient for MVP).
-    """
-    return EARTH_RADIUS_MI * func.acos(
-        func.least(
-            1.0,
-            func.greatest(
-                -1.0,
-                func.cos(func.radians(lat1))
-                * func.cos(func.radians(lat2_col))
-                * func.cos(func.radians(lng2_col) - func.radians(lng1))
-                + func.sin(func.radians(lat1)) * func.sin(func.radians(lat2_col)),
-            ),
-        )
-    )
+def haversine_miles(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Compute great-circle distance in miles using haversine formula."""
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))
+    return EARTH_RADIUS_MI * c
 
 
 @router.get("/artists")
-def search_artists(
+async def search_artists(
     db: Session = Depends(get_db),
     genres: list[str] = Query(default=[]),
     min_draw: int | None = None,
     max_rate: int | None = None,
     distance_miles: int | None = None,
-    lat: float | None = None,
-    lng: float | None = None,
+    zip_code: str | None = None,
     sort: str = "distance",  # distance|draw|rate
     page: int = 1,
     page_size: int = 20,
@@ -56,59 +51,77 @@ def search_artists(
     if max_rate is not None:
         q = q.filter(or_(ArtistProfile.min_rate == 0, ArtistProfile.min_rate <= max_rate))
 
-    distance_expr = None
-    if distance_miles is not None and lat is not None and lng is not None:
-        q = q.filter(ArtistProfile.lat.isnot(None), ArtistProfile.lng.isnot(None))
-        distance_expr = haversine_miles(lat, lng, ArtistProfile.lat, ArtistProfile.lng).label("distance_miles")
-        q = q.add_columns(distance_expr).filter(distance_expr <= float(distance_miles))
+    # Lookup searcher's coordinates from zip code
+    search_coords = None
+    if distance_miles is not None and zip_code:
+        search_coords = await lookup_zipcode(zip_code)
+        if search_coords:
+            # Only include artists with zip codes when filtering by distance
+            q = q.filter(ArtistProfile.zip_code.isnot(None))
 
-    if sort == "distance" and distance_expr is not None:
-        q = q.order_by(distance_expr.asc())
-    elif sort == "draw":
+    # For distance filtering, we need to fetch candidates and filter in Python
+    # since artist coordinates come from their zip_code lookup
+    if sort == "draw":
         q = q.order_by(ArtistProfile.max_draw.desc())
     elif sort == "rate":
         q = q.order_by(ArtistProfile.min_rate.asc())
 
-    q = q.offset((page - 1) * page_size).limit(page_size)
+    # Fetch more than needed to allow for distance filtering
+    fetch_limit = page_size * 5 if search_coords else page_size
+    offset = (page - 1) * page_size if not search_coords else 0
+    candidates = q.offset(offset).limit(fetch_limit).all()
 
-    rows = q.all()
     items = []
-    for row in rows:
-        if distance_expr is None:
-            a = row
-            dist = None
-        else:
-            a, dist = row[0], float(row[1]) if row[1] is not None else None
+    for a in candidates:
+        dist = None
 
-        items.append(
-            {
-                "id": a.id,
-                "name": a.name,
-                "city": a.city,
-                "state": a.state,
-                "lat": a.lat,
-                "lng": a.lng,
-                "distance_miles": dist,
-                "min_rate": a.min_rate,
-                "max_rate": a.max_rate,
-                "min_draw": a.min_draw,
-                "max_draw": a.max_draw,
-                "genres": [g.name for g in a.genres],
-                "media_links": a.media_links,
-            }
-        )
+        # Calculate distance if we have search coordinates
+        if search_coords and a.zip_code:
+            artist_coords = await lookup_zipcode(a.zip_code)
+            if artist_coords:
+                dist = haversine_miles(
+                    search_coords.lat, search_coords.lng,
+                    artist_coords.lat, artist_coords.lng
+                )
+                # Filter by distance
+                if distance_miles is not None and dist > distance_miles:
+                    continue
+
+        items.append({
+            "id": a.id,
+            "name": a.name,
+            "city": a.city,
+            "state": a.state,
+            "zip_code": a.zip_code,
+            "distance_miles": round(dist, 1) if dist is not None else None,
+            "min_rate": a.min_rate,
+            "max_rate": a.max_rate,
+            "min_draw": a.min_draw,
+            "max_draw": a.max_draw,
+            "genres": [g.name for g in a.genres],
+            "media_links": a.media_links,
+        })
+
+    # Sort by distance if requested
+    if sort == "distance" and search_coords:
+        items.sort(key=lambda x: x["distance_miles"] if x["distance_miles"] is not None else float("inf"))
+
+    # Paginate after distance filtering
+    if search_coords:
+        start = (page - 1) * page_size
+        items = items[start : start + page_size]
+
     return items
 
 
 @router.get("/venues")
-def search_venues(
+async def search_venues(
     db: Session = Depends(get_db),
     genres: list[str] = Query(default=[]),
     min_capacity: int | None = None,
     budget_max: int | None = None,
     distance_miles: int | None = None,
-    lat: float | None = None,
-    lng: float | None = None,
+    zip_code: str | None = None,
     sort: str = "distance",  # distance|capacity|budget
     page: int = 1,
     page_size: int = 20,
@@ -124,44 +137,55 @@ def search_venues(
     if budget_max is not None:
         q = q.filter(or_(VenueProfile.min_budget == 0, VenueProfile.min_budget <= budget_max))
 
-    distance_expr = None
-    if distance_miles is not None and lat is not None and lng is not None:
-        q = q.filter(VenueProfile.lat.isnot(None), VenueProfile.lng.isnot(None))
-        distance_expr = haversine_miles(lat, lng, VenueProfile.lat, VenueProfile.lng).label("distance_miles")
-        q = q.add_columns(distance_expr).filter(distance_expr <= float(distance_miles))
+    # Lookup searcher's coordinates from zip code
+    search_coords = None
+    if distance_miles is not None and zip_code:
+        search_coords = await lookup_zipcode(zip_code)
+        if search_coords:
+            q = q.filter(VenueProfile.zip_code.isnot(None))
 
-    if sort == "distance" and distance_expr is not None:
-        q = q.order_by(distance_expr.asc())
-    elif sort == "capacity":
+    if sort == "capacity":
         q = q.order_by(VenueProfile.capacity.desc())
     elif sort == "budget":
         q = q.order_by(VenueProfile.max_budget.desc())
 
-    q = q.offset((page - 1) * page_size).limit(page_size)
+    fetch_limit = page_size * 5 if search_coords else page_size
+    offset = (page - 1) * page_size if not search_coords else 0
+    candidates = q.offset(offset).limit(fetch_limit).all()
 
-    rows = q.all()
     items = []
-    for row in rows:
-        if distance_expr is None:
-            v = row
-            dist = None
-        else:
-            v, dist = row[0], float(row[1]) if row[1] is not None else None
+    for v in candidates:
+        dist = None
 
-        items.append(
-            {
-                "id": v.id,
-                "venue_name": v.venue_name,
-                "city": v.city,
-                "state": v.state,
-                "lat": v.lat,
-                "lng": v.lng,
-                "distance_miles": dist,
-                "capacity": v.capacity,
-                "min_budget": v.min_budget,
-                "max_budget": v.max_budget,
-                "genres": [g.name for g in v.genres],
-                "amenities": v.amenities,
-            }
-        )
+        if search_coords and v.zip_code:
+            venue_coords = await lookup_zipcode(v.zip_code)
+            if venue_coords:
+                dist = haversine_miles(
+                    search_coords.lat, search_coords.lng,
+                    venue_coords.lat, venue_coords.lng
+                )
+                if distance_miles is not None and dist > distance_miles:
+                    continue
+
+        items.append({
+            "id": v.id,
+            "venue_name": v.venue_name,
+            "city": v.city,
+            "state": v.state,
+            "zip_code": v.zip_code,
+            "distance_miles": round(dist, 1) if dist is not None else None,
+            "capacity": v.capacity,
+            "min_budget": v.min_budget,
+            "max_budget": v.max_budget,
+            "genres": [g.name for g in v.genres],
+            "amenities": v.amenities,
+        })
+
+    if sort == "distance" and search_coords:
+        items.sort(key=lambda x: x["distance_miles"] if x["distance_miles"] is not None else float("inf"))
+
+    if search_coords:
+        start = (page - 1) * page_size
+        items = items[start : start + page_size]
+
     return items

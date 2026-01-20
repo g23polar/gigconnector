@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -24,8 +24,7 @@ class ArtistProfile(Base):
     state: Mapped[str] = mapped_column(String, default="", nullable=False)
     country: Mapped[str] = mapped_column(String, default="US", nullable=False)
 
-    lat: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    lng: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    zip_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, index=True)
 
     travel_radius_miles: Mapped[int] = mapped_column(Integer, default=25, nullable=False)
 

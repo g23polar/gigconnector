@@ -37,9 +37,7 @@ def create_or_update_venue_profile(
     prof.max_budget = payload.max_budget
     prof.amenities = payload.amenities
 
-    prof.lat = payload.lat
-    prof.lng = payload.lng
-
+    prof.zip_code = payload.zip_code
 
     prof.genres = upsert_genres(db, payload.genre_names)
 
@@ -50,9 +48,11 @@ def create_or_update_venue_profile(
         id=prof.id,
         venue_name=prof.venue_name,
         description=prof.description,
+        address=prof.address,
         city=prof.city,
         state=prof.state,
         country=prof.country,
+        zip_code=prof.zip_code,
         capacity=prof.capacity,
         min_budget=prof.min_budget,
         max_budget=prof.max_budget,
@@ -71,9 +71,11 @@ def get_my_venue_profile(db: Session = Depends(get_db), user=Depends(get_current
         id=prof.id,
         venue_name=prof.venue_name,
         description=prof.description,
+        address=prof.address,
         city=prof.city,
         state=prof.state,
         country=prof.country,
+        zip_code=prof.zip_code,
         capacity=prof.capacity,
         min_budget=prof.min_budget,
         max_budget=prof.max_budget,
@@ -81,14 +83,16 @@ def get_my_venue_profile(db: Session = Depends(get_db), user=Depends(get_current
         genres=[g.name for g in prof.genres],
     )
 
+
 @router.get("/{venue_id}", response_model=VenueProfileOut)
-def get_venue_by_id(venue_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_venue_by_id(venue_id: str, db: Session = Depends(get_db)):
     prof = db.get(VenueProfile, venue_id)
     if not prof:
         raise HTTPException(status_code=404, detail="Venue profile not found")
     return VenueProfileOut(
         id=prof.id, venue_name=prof.venue_name, description=prof.description,
-        city=prof.city, state=prof.state, country=prof.country,
+        address=prof.address, city=prof.city, state=prof.state, country=prof.country,
+        zip_code=prof.zip_code,
         capacity=prof.capacity,
         min_budget=prof.min_budget, max_budget=prof.max_budget,
         amenities=prof.amenities,

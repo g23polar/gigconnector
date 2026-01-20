@@ -7,13 +7,12 @@ class VenueProfileIn(BaseModel):
     venue_name: str
     description: str = ""
 
-    address: str = ""
+    address: str
     city: str = ""
     state: str = ""
     country: str = "US"
 
-    lat: Optional[float] = None
-    lng: Optional[float] = None
+    zip_code: Optional[str] = None
 
     capacity: int = 0
     min_budget: int = 0
@@ -28,9 +27,11 @@ class VenueProfileOut(BaseModel):
     venue_name: str
     description: str
 
+    address: str
     city: str
     state: str
     country: str
+    zip_code: Optional[str] = None
 
     capacity: int
     min_budget: int

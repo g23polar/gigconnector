@@ -42,8 +42,8 @@ def list_bookmarks(db: Session = Depends(get_db), user=Depends(get_current_user)
     return [
         {
             "id": b.id,
-            "type": b.to_entity_type,
-            "entity_id": b.to_entity_id,
+            "to_entity_type": b.to_entity_type,
+            "to_entity_id": b.to_entity_id,
             "created_at": b.created_at,
         }
         for b in bms
