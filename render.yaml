@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: gigconnecter-backend
+    rootDir: backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gigconnecter-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: JWT_ALG
+        value: HS256
+      - key: ACCESS_TOKEN_MINUTES
+        value: "30"
+
+  - type: static
+    name: gigconnecter-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: gigconnecter-backend
+          property: host
+
+databases:
+  - name: gigconnecter-db
+    plan: starter
