@@ -6,14 +6,14 @@ export default function Home() {
   const artistNext = encodeURIComponent("/profile/artist");
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
-  const words = ["band", "venue"];
+  const words = ["muscian", "venue"];
   const [targetIndex, setTargetIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState("");
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       setTargetIndex((i) => (i + 1) % words.length);
-    }, 3000);
+    }, 2000);
     return () => clearInterval(intervalId);
   }, [words.length]);
 
@@ -52,7 +52,7 @@ export default function Home() {
               <span className="typeCursor">|</span>?
             </h1>
 
-            <div className="homeSubHeadline">FIND YOUR BAND / VENUE</div>
+            <div className="homeSubHeadline">FIND YOUR MUSICIANS / VENUE</div>
 
             <div className="homeCTA">
               <a className="btn btnPrimary" href="#choose">
