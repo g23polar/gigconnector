@@ -317,6 +317,23 @@ label{
   font-size: clamp(48px, 9vw, 120px);
 }
 
+.typeWord {
+  display: inline-block;
+  min-width: 5ch;
+}
+
+.typeCursor {
+  display: inline-block;
+  margin-left: 2px;
+  width: 0.6ch;
+  animation: cursorBlink 1s steps(2, start) infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 .homeSubHeadline {
   margin-top: 18px;
   font-size: clamp(16px, 2vw, 22px);

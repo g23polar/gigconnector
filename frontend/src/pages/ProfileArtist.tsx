@@ -112,6 +112,22 @@ export default function ProfileArtist() {
       setErr("Name is required.");
       return;
     }
+    const spotifyLink = String(model.media_links?.spotify ?? "").trim();
+    if (!spotifyLink) {
+      setErr("Spotify link is required.");
+      return;
+    }
+    try {
+      const url = new URL(spotifyLink);
+      const host = url.hostname.toLowerCase();
+      if (!host.endsWith("spotify.com")) {
+        setErr("Spotify link must be a spotify.com URL.");
+        return;
+      }
+    } catch {
+      setErr("Spotify link must be a valid URL.");
+      return;
+    }
     if (!model.city.trim() || !model.state.trim()) {
       setErr("City and state are required.");
       return;
@@ -209,6 +225,19 @@ export default function ProfileArtist() {
 
             <Field label="Bio" hint="One or two sentences about your sound and what you're looking for.">
               <textarea value={model.bio} onChange={(e) => setModel({ ...model, bio: e.target.value })} />
+            </Field>
+
+            <Field label="Spotify link" hint="Required">
+              <input
+                className="input"
+                value={String(model.media_links?.spotify ?? "")}
+                onChange={(e) =>
+                  setModel({
+                    ...model,
+                    media_links: { ...model.media_links, spotify: e.target.value },
+                  })
+                }
+              />
             </Field>
           </div>
 
