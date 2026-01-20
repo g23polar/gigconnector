@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { clearToken } from "../lib/auth";
 import type { Venue } from "../lib/types";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
@@ -40,6 +42,7 @@ type VenueIn = {
 };
 
 export default function ProfileVenue() {
+  const nav = useNavigate();
   const [model, setModel] = useState<VenueIn>({
     venue_name: "",
     description: "",
@@ -61,6 +64,7 @@ export default function ProfileVenue() {
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -122,6 +126,21 @@ export default function ProfileVenue() {
       setErr(e.message ?? "Failed to save");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const onDeleteAccount = async () => {
+    if (!confirm("Delete your account and profile? This cannot be undone.")) return;
+    setErr(null);
+    setDeleteBusy(true);
+    try {
+      await apiFetch(`/users/me`, { method: "DELETE" });
+      clearToken();
+      nav("/");
+    } catch (e: any) {
+      setErr(e.message ?? "Failed to delete account");
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -243,6 +262,16 @@ export default function ProfileVenue() {
             <span className="smallMuted">Tip: You can update this anytime.</span>
           </div>
         </form>
+
+        <div className="divider" />
+
+        <div>
+          <div className="sectionTitle">Danger zone</div>
+          <p className="sectionDesc">Delete your account and profile permanently.</p>
+          <Button variant="ghost" onClick={onDeleteAccount} disabled={deleteBusy}>
+            {deleteBusy ? "Deleting..." : "Delete account"}
+          </Button>
+        </div>
       </Panel>
     </div>
   );
