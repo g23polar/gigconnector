@@ -17,9 +17,10 @@ services:
       - key: ACCESS_TOKEN_MINUTES
         value: "30"
 
-  - type: static_site
+  - type: web
     name: gigconnecter-frontend
     rootDir: frontend
+    runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
