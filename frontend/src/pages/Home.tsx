@@ -39,8 +39,8 @@ export default function Home() {
 
         <div className="homeHeroInner">
           <div className="homeTopRow">
-            <div>TURN IT UP</div>
-            <div>PARTY HARD</div>
+            {/* <div>TURN IT UP</div>
+            <div>PARTY HARD</div> */}
           </div>
           <div className="homeTopRule" />
 
