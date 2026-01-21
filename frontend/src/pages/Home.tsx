@@ -6,7 +6,7 @@ export default function Home() {
   const artistNext = encodeURIComponent("/profile/artist");
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
-  const words = ["muscian", "venue"];
+  const words = ["musician", "venue"];
   const [targetIndex, setTargetIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState("");
 
