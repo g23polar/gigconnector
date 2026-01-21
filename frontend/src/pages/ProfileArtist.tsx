@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { clearToken } from "../lib/auth";
@@ -42,6 +42,33 @@ type ArtistIn = {
   genre_names: string[];
 };
 
+type MediaItem = {
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+};
+
+const MAX_PROFILE_MEDIA_BYTES = 15 * 1024 * 1024;
+
+const normalizeUploads = (value: unknown): MediaItem[] => {
+  if (!Array.isArray(value)) return [];
+  const items: MediaItem[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") continue;
+    const record = entry as Record<string, unknown>;
+    const url = typeof record.url === "string" ? record.url : "";
+    if (!url) continue;
+    items.push({
+      name: typeof record.name === "string" ? record.name : "Untitled",
+      url,
+      type: typeof record.type === "string" ? record.type : "",
+      size: typeof record.size === "number" ? record.size : 0,
+    });
+  }
+  return items;
+};
+
 export default function ProfileArtist() {
   const nav = useNavigate();
   const [model, setModel] = useState<ArtistIn>({
@@ -67,6 +94,7 @@ export default function ProfileArtist() {
   const [ok, setOk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -147,6 +175,75 @@ export default function ProfileArtist() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ""));
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.readAsDataURL(file);
+    });
+
+  const onMediaSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setErr(null);
+    setOk(null);
+
+    const invalid = files.find(
+      (file) =>
+        !(
+          file.type.startsWith("image/") ||
+          file.type.startsWith("audio/") ||
+          file.type.startsWith("video/")
+        )
+    );
+    if (invalid) {
+      setErr(`"${invalid.name}" is not an image, audio, or video file.`);
+      e.target.value = "";
+      return;
+    }
+
+    const uploads = normalizeUploads(model.media_links?.uploads);
+    const existingTotal = uploads.reduce((sum, item) => sum + item.size, 0);
+    const newTotal = files.reduce((sum, file) => sum + file.size, 0);
+    if (existingTotal + newTotal > MAX_PROFILE_MEDIA_BYTES) {
+      setErr("Total media size exceeds 15MB for this profile.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadBusy(true);
+    try {
+      const newItems = await Promise.all(
+        files.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          url: await readFileAsDataUrl(file),
+          size: file.size,
+        }))
+      );
+      setModel({
+        ...model,
+        media_links: { ...model.media_links, uploads: [...uploads, ...newItems] },
+      });
+      setOk("Media added. Remember to save your profile.");
+    } catch (error: any) {
+      setErr(error?.message ?? "Failed to add media.");
+    } finally {
+      setUploadBusy(false);
+      e.target.value = "";
+    }
+  };
+
+  const onRemoveUpload = (index: number) => {
+    const uploads = normalizeUploads(model.media_links?.uploads);
+    const next = uploads.filter((_, idx) => idx !== index);
+    setModel({
+      ...model,
+      media_links: { ...model.media_links, uploads: next },
+    });
   };
 
   const onDeleteAccount = async () => {
@@ -238,6 +335,54 @@ export default function ProfileArtist() {
                   })
                 }
               />
+            </Field>
+
+            <Field
+              label="Media uploads"
+              hint="Add images, audio, or video files (15MB total max)."
+            >
+              <input
+                className="input"
+                type="file"
+                accept="image/*,audio/*,video/*"
+                multiple
+                onChange={onMediaSelected}
+                disabled={uploadBusy}
+              />
+              {normalizeUploads(model.media_links?.uploads).length > 0 && (
+                <div className="card" style={{ marginTop: 10 }}>
+                  {normalizeUploads(model.media_links?.uploads).map((item, idx) => (
+                    <div
+                      key={`${item.name}-${idx}`}
+                      style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div className="smallMuted">{item.name}</div>
+                        {item.type.startsWith("image/") && (
+                          <img
+                            src={item.url}
+                            alt={item.name}
+                            style={{ maxWidth: 220, maxHeight: 140, borderRadius: 8 }}
+                          />
+                        )}
+                        {item.type.startsWith("audio/") && (
+                          <audio controls src={item.url} style={{ width: "100%" }} />
+                        )}
+                        {item.type.startsWith("video/") && (
+                          <video controls src={item.url} style={{ width: "100%", maxHeight: 220 }} />
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => onRemoveUpload(idx)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Field>
           </div>
 

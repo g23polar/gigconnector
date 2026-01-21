@@ -7,6 +7,29 @@ import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
 import type { Artist } from "../lib/types";
 
+type MediaItem = {
+  name: string;
+  url: string;
+  type: string;
+};
+
+const extractUploads = (value: unknown): MediaItem[] => {
+  if (!Array.isArray(value)) return [];
+  const items: MediaItem[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") continue;
+    const record = entry as Record<string, unknown>;
+    const url = typeof record.url === "string" ? record.url : "";
+    if (!url) continue;
+    items.push({
+      name: typeof record.name === "string" ? record.name : "Untitled",
+      url,
+      type: typeof record.type === "string" ? record.type : "",
+    });
+  }
+  return items;
+};
+
 export default function ArtistDetail() {
   const { id } = useParams();
   const artistId = id ?? "";
@@ -19,6 +42,8 @@ export default function ArtistDetail() {
   const [matchBusy, setMatchBusy] = useState(false);
 
   const role = getRole();
+  const uploads = item ? extractUploads(item.media_links?.uploads) : [];
+  const linkEntries = item ? Object.entries(item.media_links ?? {}).filter(([key]) => key !== "uploads") : [];
 
   const endpoint = useMemo(() => `/artist-profile/${encodeURIComponent(artistId)}`, [artistId]);
 
@@ -133,13 +158,42 @@ export default function ArtistDetail() {
             </div>
 
             {/* Media links (optional) */}
-            {item.media_links && Object.keys(item.media_links).length > 0 && (
+            {uploads.length > 0 && (
+              <>
+                <div className="divider" />
+                <div>
+                  <div className="sectionTitle">Media</div>
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {uploads.map((media, idx) => (
+                      <div key={`${media.name}-${idx}`} className="card">
+                        <div className="cardTitle" style={{ marginBottom: 8 }}>{media.name}</div>
+                        {media.type.startsWith("image/") && (
+                          <img
+                            src={media.url}
+                            alt={media.name}
+                            style={{ maxWidth: "100%", borderRadius: 8 }}
+                          />
+                        )}
+                        {media.type.startsWith("audio/") && (
+                          <audio controls src={media.url} style={{ width: "100%" }} />
+                        )}
+                        {media.type.startsWith("video/") && (
+                          <video controls src={media.url} style={{ width: "100%", maxHeight: 320 }} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {linkEntries.length > 0 && (
               <>
                 <div className="divider" />
                 <div>
                   <div className="sectionTitle">Links</div>
                   <div className="smallMuted">
-                    {Object.entries(item.media_links).map(([k, v]) => (
+                    {linkEntries.map(([k, v]) => (
                       <div key={k}>
                         <span style={{ color: "var(--muted)" }}>{k}:</span>{" "}
                         <span>{String(v)}</span>
