@@ -58,7 +58,7 @@ export default function ArtistDetail() {
   const uploads = item ? extractUploads(item.media_links?.uploads) : [];
   const linkEntries = item
     ? Object.entries(item.media_links ?? {}).filter(
-        ([key]) => key !== "uploads" && key !== "live_recording"
+        ([key]) => key !== "uploads" && key !== "live_recording" && key !== "location_place_id"
       )
     : [];
 
