@@ -30,6 +30,18 @@ const extractUploads = (value: unknown): MediaItem[] => {
   return items;
 };
 
+const extractSingleMedia = (value: unknown): MediaItem | null => {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const url = typeof record.url === "string" ? record.url : "";
+  if (!url) return null;
+  return {
+    name: typeof record.name === "string" ? record.name : "Untitled",
+    url,
+    type: typeof record.type === "string" ? record.type : "",
+  };
+};
+
 export default function ArtistDetail() {
   const { id } = useParams();
   const artistId = id ?? "";
@@ -42,8 +54,13 @@ export default function ArtistDetail() {
   const [matchBusy, setMatchBusy] = useState(false);
 
   const role = getRole();
+  const liveRecording = item ? extractSingleMedia(item.media_links?.live_recording) : null;
   const uploads = item ? extractUploads(item.media_links?.uploads) : [];
-  const linkEntries = item ? Object.entries(item.media_links ?? {}).filter(([key]) => key !== "uploads") : [];
+  const linkEntries = item
+    ? Object.entries(item.media_links ?? {}).filter(
+        ([key]) => key !== "uploads" && key !== "live_recording"
+      )
+    : [];
 
   const endpoint = useMemo(() => `/artist-profile/${encodeURIComponent(artistId)}`, [artistId]);
 
@@ -158,12 +175,22 @@ export default function ArtistDetail() {
             </div>
 
             {/* Media links (optional) */}
-            {uploads.length > 0 && (
+            {(liveRecording || uploads.length > 0) && (
               <>
                 <div className="divider" />
                 <div>
                   <div className="sectionTitle">Media</div>
                   <div style={{ display: "grid", gap: 12 }}>
+                    {liveRecording && liveRecording.type.startsWith("video/") && (
+                      <div className="card">
+                        <div className="cardTitle" style={{ marginBottom: 8 }}>
+                          Live performance
+                        </div>
+                        {liveRecording.type.startsWith("video/") && (
+                          <video controls src={liveRecording.url} style={{ width: "100%", maxHeight: 320 }} />
+                        )}
+                      </div>
+                    )}
                     {uploads.map((media, idx) => (
                       <div key={`${media.name}-${idx}`} className="card">
                         <div className="cardTitle" style={{ marginBottom: 8 }}>{media.name}</div>

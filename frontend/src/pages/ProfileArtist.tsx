@@ -69,6 +69,19 @@ const normalizeUploads = (value: unknown): MediaItem[] => {
   return items;
 };
 
+const normalizeSingleMedia = (value: unknown): MediaItem | null => {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const url = typeof record.url === "string" ? record.url : "";
+  if (!url) return null;
+  return {
+    name: typeof record.name === "string" ? record.name : "Untitled",
+    url,
+    type: typeof record.type === "string" ? record.type : "",
+    size: typeof record.size === "number" ? record.size : 0,
+  };
+};
+
 export default function ProfileArtist() {
   const nav = useNavigate();
   const [model, setModel] = useState<ArtistIn>({
@@ -160,6 +173,10 @@ export default function ProfileArtist() {
       setErr("City and state are required.");
       return;
     }
+    if (!normalizeSingleMedia(model.media_links?.live_recording)) {
+      setErr("A live performance recording is required.");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -186,27 +203,53 @@ export default function ProfileArtist() {
     });
 
   const onMediaSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    await handleMediaSelection(e, "uploads", true);
+  };
+
+  const onLiveRecordingSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    await handleMediaSelection(e, "live_recording", false);
+  };
+
+  const handleMediaSelection = async (
+    e: ChangeEvent<HTMLInputElement>,
+    target: "uploads" | "live_recording",
+    allowMultiple: boolean
+  ) => {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
+    if (!allowMultiple && files.length > 1) {
+      setErr("Please select a single live recording.");
+      e.target.value = "";
+      return;
+    }
     setErr(null);
     setOk(null);
 
-    const invalid = files.find(
-      (file) =>
-        !(
-          file.type.startsWith("image/") ||
-          file.type.startsWith("audio/") ||
-          file.type.startsWith("video/")
-        )
-    );
+    const invalid = files.find((file) => {
+      if (target === "live_recording") {
+        return !file.type.startsWith("video/");
+      }
+      return !(
+        file.type.startsWith("image/") ||
+        file.type.startsWith("audio/") ||
+        file.type.startsWith("video/")
+      );
+    });
     if (invalid) {
-      setErr(`"${invalid.name}" is not an image, audio, or video file.`);
+      setErr(
+        target === "live_recording"
+          ? `"${invalid.name}" must be a video file.`
+          : `"${invalid.name}" is not an image, audio, or video file.`
+      );
       e.target.value = "";
       return;
     }
 
     const uploads = normalizeUploads(model.media_links?.uploads);
-    const existingTotal = uploads.reduce((sum, item) => sum + item.size, 0);
+    const liveRecording = normalizeSingleMedia(model.media_links?.live_recording);
+    const existingTotal =
+      uploads.reduce((sum, item) => sum + item.size, 0) +
+      (target === "live_recording" ? 0 : liveRecording?.size ?? 0);
     const newTotal = files.reduce((sum, file) => sum + file.size, 0);
     if (existingTotal + newTotal > MAX_PROFILE_MEDIA_BYTES) {
       setErr("Total media size exceeds 15MB for this profile.");
@@ -224,6 +267,14 @@ export default function ProfileArtist() {
           size: file.size,
         }))
       );
+      if (target === "live_recording") {
+        setModel({
+          ...model,
+          media_links: { ...model.media_links, live_recording: newItems[0] },
+        });
+        setOk("Live recording added. Remember to save your profile.");
+        return;
+      }
       setModel({
         ...model,
         media_links: { ...model.media_links, uploads: [...uploads, ...newItems] },
@@ -246,6 +297,14 @@ export default function ProfileArtist() {
     });
   };
 
+  const onRemoveLiveRecording = () => {
+    const { live_recording, ...rest } = model.media_links ?? {};
+    setModel({
+      ...model,
+      media_links: { ...rest },
+    });
+  };
+
   const onDeleteAccount = async () => {
     if (!confirm("Delete your account and profile? This cannot be undone.")) return;
     setErr(null);
@@ -260,6 +319,9 @@ export default function ProfileArtist() {
       setDeleteBusy(false);
     }
   };
+
+  const liveItem = normalizeSingleMedia(model.media_links?.live_recording);
+  const uploadItems = normalizeUploads(model.media_links?.uploads);
 
   return (
     <div className="container" style={{ maxWidth: 920 }}>
@@ -338,8 +400,40 @@ export default function ProfileArtist() {
             </Field>
 
             <Field
-              label="Media uploads"
-              hint="Add images, audio, or video files (15MB total max)."
+              label="Live performance recording"
+              hint="Required: one video recording (15MB total max)."
+            >
+              <input
+                className="input"
+                type="file"
+                accept="video/*"
+                onChange={onLiveRecordingSelected}
+                disabled={uploadBusy}
+              />
+              {liveItem && (
+                <div className="card" style={{ marginTop: 10 }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <div style={{ flex: 1 }}>
+                      <div className="smallMuted">{liveItem.name}</div>
+                      {liveItem.type.startsWith("video/") && (
+                        <video
+                          controls
+                          src={liveItem.url}
+                          style={{ width: "100%", maxHeight: 220 }}
+                        />
+                      )}
+                    </div>
+                    <Button type="button" variant="ghost" onClick={onRemoveLiveRecording}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Field>
+
+            <Field
+              label="Additional media"
+              hint="Optional images, audio, or video (15MB total max)."
             >
               <input
                 className="input"
@@ -349,9 +443,9 @@ export default function ProfileArtist() {
                 onChange={onMediaSelected}
                 disabled={uploadBusy}
               />
-              {normalizeUploads(model.media_links?.uploads).length > 0 && (
+              {uploadItems.length > 0 && (
                 <div className="card" style={{ marginTop: 10 }}>
-                  {normalizeUploads(model.media_links?.uploads).map((item, idx) => (
+                  {uploadItems.map((item, idx) => (
                     <div
                       key={`${item.name}-${idx}`}
                       style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}
