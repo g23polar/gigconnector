@@ -455,7 +455,7 @@ export default function ProfileArtist() {
                         {item.type.startsWith("image/") && (
                           <img
                             src={item.url}
-                            alt={item.name}
+                            alt={"image name here"}
                             style={{ maxWidth: 220, maxHeight: 140, borderRadius: 8 }}
                           />
                         )}
