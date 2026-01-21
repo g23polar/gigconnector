@@ -451,11 +451,11 @@ export default function ProfileArtist() {
                       style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}
                     >
                       <div style={{ flex: 1 }}>
-                        <div className="smallMuted">{item.name}</div>
+                        <div className="smallMuted">{"item.name 1"}</div>
                         {item.type.startsWith("image/") && (
                           <img
                             src={item.url}
-                            alt={"image name here"}
+                            alt={"item.name 2"}
                             style={{ maxWidth: 220, maxHeight: 140, borderRadius: 8 }}
                           />
                         )}
