@@ -49,7 +49,57 @@ type MediaItem = {
   size: number;
 };
 
+type PlaceComponent = {
+  long_name: string;
+  short_name: string;
+  types: string[];
+};
+
+type PlaceResult = {
+  address_components?: PlaceComponent[];
+  formatted_address?: string;
+  place_id?: string;
+};
+
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
 const MAX_PROFILE_MEDIA_BYTES = 15 * 1024 * 1024;
+const GOOGLE_PLACES_SCRIPT_ATTR = "data-google-places";
+let googlePlacesPromise: Promise<void> | null = null;
+
+const loadGooglePlaces = (apiKey: string) => {
+  if (window.google?.maps?.places) return Promise.resolve();
+  if (googlePlacesPromise) return googlePlacesPromise;
+  googlePlacesPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[${GOOGLE_PLACES_SCRIPT_ATTR}]`);
+    if (existing) {
+      if (window.google?.maps?.places) {
+        resolve();
+        return;
+      }
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Failed to load Google Places.")), {
+        once: true,
+      });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      apiKey
+    )}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.setAttribute(GOOGLE_PLACES_SCRIPT_ATTR, "true");
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Google Places."));
+    document.head.appendChild(script);
+  });
+  return googlePlacesPromise;
+};
 
 const normalizeUploads = (value: unknown): MediaItem[] => {
   if (!Array.isArray(value)) return [];
@@ -84,6 +134,10 @@ const normalizeSingleMedia = (value: unknown): MediaItem | null => {
 
 export default function ProfileArtist() {
   const nav = useNavigate();
+  const placesInputRef = useRef<HTMLInputElement>(null);
+  const [placesReady, setPlacesReady] = useState(false);
+  const [placesError, setPlacesError] = useState<string | null>(null);
+  const [placesStatus, setPlacesStatus] = useState<string | null>(null);
   const [model, setModel] = useState<ArtistIn>({
     name: "",
     bio: "",
@@ -143,6 +197,68 @@ export default function ProfileArtist() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+    if (!apiKey) {
+      setPlacesError("Missing Google Maps API key.");
+      return;
+    }
+    let active = true;
+    loadGooglePlaces(apiKey)
+      .then(() => {
+        if (!active) return;
+        setPlacesReady(true);
+      })
+      .catch((error: any) => {
+        if (!active) return;
+        setPlacesError(error?.message ?? "Failed to load Google Places.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!placesReady || !placesInputRef.current || !window.google?.maps?.places) return;
+    const autocomplete = new window.google.maps.places.Autocomplete(placesInputRef.current, {
+      types: ["geocode"],
+    });
+    if (autocomplete.setFields) {
+      autocomplete.setFields(["address_component", "formatted_address", "place_id"]);
+    }
+    const listener = autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace() as PlaceResult;
+      const components = place.address_components ?? [];
+      const findComponent = (type: string) =>
+        components.find((c) => c.types.includes(type));
+      const city =
+        findComponent("locality")?.long_name ??
+        findComponent("postal_town")?.long_name ??
+        findComponent("administrative_area_level_2")?.long_name ??
+        "";
+      const state = findComponent("administrative_area_level_1")?.short_name ?? "";
+      const country = findComponent("country")?.short_name ?? "";
+      const zip = findComponent("postal_code")?.long_name ?? "";
+
+      setModel((m) => ({
+        ...m,
+        city: city || m.city,
+        state: state || m.state,
+        country: country || m.country,
+        zip_code: zip || m.zip_code,
+        media_links: {
+          ...m.media_links,
+          location_place_id: place.place_id ?? "",
+        },
+      }));
+      setPlacesStatus(place.formatted_address ? `Verified: ${place.formatted_address}` : "Verified.");
+      setErr(null);
+    });
+    return () => {
+      if (listener) listener.remove();
+    };
+  }, [placesReady]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -322,6 +438,7 @@ export default function ProfileArtist() {
 
   const liveItem = normalizeSingleMedia(model.media_links?.live_recording);
   const uploadItems = normalizeUploads(model.media_links?.uploads);
+  const hasPlaceId = Boolean((model.media_links as Record<string, unknown> | undefined)?.location_place_id);
 
   return (
     <div className="container" style={{ maxWidth: 920 }}>
@@ -451,11 +568,13 @@ export default function ProfileArtist() {
                       style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}
                     >
                       <div style={{ flex: 1 }}>
-                        <div className="smallMuted">{"item.name 1"}</div>
+                        {!item.type.startsWith("image/") && (
+                          <div className="smallMuted">{item.name}</div>
+                        )}
                         {item.type.startsWith("image/") && (
                           <img
                             src={item.url}
-                            alt={"item.name 2"}
+                            alt={item.name}
                             style={{ maxWidth: 220, maxHeight: 140, borderRadius: 8 }}
                           />
                         )}
@@ -484,6 +603,28 @@ export default function ProfileArtist() {
 
           <div>
             <div className="sectionTitle">Location</div>
+            <Field
+              label="Verify location"
+              hint="Use Google to validate and autofill city/state/zip."
+            >
+              <input
+                ref={placesInputRef}
+                className="input"
+                placeholder="Search for your city or address"
+                disabled={!!placesError || !placesReady}
+              />
+              {placesError && <div className="smallMuted" style={{ marginTop: 6 }}>{placesError}</div>}
+              {placesStatus && (
+                <div className="smallMuted" style={{ marginTop: 6 }}>
+                  {placesStatus}
+                </div>
+              )}
+              {!placesStatus && hasPlaceId && (
+                <div className="smallMuted" style={{ marginTop: 6 }}>
+                  Location verified with Google.
+                </div>
+              )}
+            </Field>
             <div className="grid2">
               <Field label="City">
                 <input className="input" value={model.city} onChange={(e) => setModel({ ...model, city: e.target.value })} />
