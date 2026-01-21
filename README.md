@@ -1,7 +1,8 @@
 https://gigconnecter-frontend.onrender.com
 
-tech stack 
-	code
+tech stack
+
+	code 
 		python
 		typescript 
 	frameworks
