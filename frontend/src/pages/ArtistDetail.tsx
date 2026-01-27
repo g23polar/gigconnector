@@ -5,6 +5,7 @@ import { getRole, getToken } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
+import LazyVideo from "../ui/LazyVideo";
 import type { Artist } from "../lib/types";
 
 type MediaItem = {
@@ -187,7 +188,7 @@ export default function ArtistDetail() {
                           Live performance
                         </div>
                         {liveRecording.type.startsWith("video/") && (
-                          <video controls src={liveRecording.url} style={{ width: "100%", maxHeight: 320 }} />
+                          <LazyVideo controls src={liveRecording.url} style={{ width: "100%", maxHeight: 320 }} />
                         )}
                       </div>
                     )}
@@ -205,7 +206,7 @@ export default function ArtistDetail() {
                           <audio controls src={media.url} style={{ width: "100%" }} />
                         )}
                         {media.type.startsWith("video/") && (
-                          <video controls src={media.url} style={{ width: "100%", maxHeight: 320 }} />
+                          <LazyVideo controls src={media.url} style={{ width: "100%", maxHeight: 320 }} />
                         )}
                       </div>
                     ))}
