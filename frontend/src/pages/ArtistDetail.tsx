@@ -53,8 +53,11 @@ export default function ArtistDetail() {
   const [busy, setBusy] = useState(false);
   const [matchMsg, setMatchMsg] = useState<string | null>(null);
   const [matchBusy, setMatchBusy] = useState(false);
+  const [bookmarkId, setBookmarkId] = useState<string | null>(null);
+  const [matchStatus, setMatchStatus] = useState<"none" | "pending" | "matched">("none");
 
   const role = getRole();
+  const isAuthed = !!getToken();
   const liveRecording = item ? extractSingleMedia(item.media_links?.live_recording) : null;
   const uploads = item ? extractUploads(item.media_links?.uploads) : [];
   const linkEntries = item
@@ -75,32 +78,70 @@ export default function ArtistDetail() {
       .finally(() => setBusy(false));
   }, [artistId, endpoint]);
 
+  useEffect(() => {
+    if (!isAuthed || !artistId) return;
+    apiFetch<{ id: string; to_entity_type: string; to_entity_id: string }[]>("/bookmarks")
+      .then((list) => {
+        const found = list.find((b) => b.to_entity_type === "artist" && b.to_entity_id === artistId);
+        setBookmarkId(found?.id ?? null);
+      })
+      .catch(() => {});
+    if (role === "venue") {
+      Promise.all([
+        apiFetch<{ target_type: string; target_id: string }[]>("/matches"),
+        apiFetch<{ target_type: string; target_id: string }[]>("/matches/outgoing"),
+      ])
+        .then(([mutual, outgoing]) => {
+          if (mutual.some((m) => m.target_type === "artist" && m.target_id === artistId)) {
+            setMatchStatus("matched");
+          } else if (outgoing.some((m) => m.target_type === "artist" && m.target_id === artistId)) {
+            setMatchStatus("pending");
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isAuthed, artistId, role]);
+
   const bookmark = async () => {
-    const token = getToken();
-    if (!token) {
+    if (!isAuthed) {
       nav(`/login?next=${encodeURIComponent(`/artists/${artistId}`)}`);
       return;
     }
-    await apiFetch(`/bookmarks?to_entity_type=artist&to_entity_id=${encodeURIComponent(artistId)}`, { method: "POST" });
+    try {
+      if (bookmarkId) {
+        await apiFetch(`/bookmarks/${encodeURIComponent(bookmarkId)}`, { method: "DELETE" });
+        setBookmarkId(null);
+      } else {
+        const resp = await apiFetch<{ id: string }>(`/bookmarks?to_entity_type=artist&to_entity_id=${encodeURIComponent(artistId)}`, { method: "POST" });
+        setBookmarkId(resp.id);
+      }
+    } catch {}
   };
 
   const match = async () => {
     if (role !== "venue") return;
-    const token = getToken();
-    if (!token) {
+    if (!isAuthed) {
       nav(`/login?next=${encodeURIComponent(`/artists/${artistId}`)}`);
       return;
     }
     setMatchMsg(null);
     setMatchBusy(true);
     try {
-      const resp = await apiFetch<{ matched?: boolean }>(`/matches`, {
-        method: "POST",
-        body: { target_type: "artist", target_id: artistId },
-      });
-      setMatchMsg(resp.matched ? "Matched." : "Match request sent.");
+      if (matchStatus === "matched" || matchStatus === "pending") {
+        await apiFetch(`/matches`, {
+          method: "DELETE",
+          body: { target_type: "artist", target_id: artistId },
+        });
+        setMatchStatus("none");
+      } else {
+        const resp = await apiFetch<{ matched?: boolean }>(`/matches`, {
+          method: "POST",
+          body: { target_type: "artist", target_id: artistId },
+        });
+        setMatchStatus(resp.matched ? "matched" : "pending");
+      }
     } catch (e: any) {
-      setMatchMsg(e.message ?? "Match failed");
+      setMatchMsg(e.message ?? "Action failed");
     } finally {
       setMatchBusy(false);
     }
@@ -135,11 +176,19 @@ export default function ArtistDetail() {
               </div>
 
               <div className="btnRow" style={{ flexShrink: 0 }}>
-                <Button variant="ghost" onClick={bookmark}>Bookmark</Button>
+                <Button variant="ghost" onClick={bookmark}>
+                  {bookmarkId ? "Unbookmark" : "Bookmark"}
+                </Button>
                 {role === "venue" && (
-                  <Button variant="primary" onClick={match} disabled={matchBusy}>
-                    {matchBusy ? "Matching..." : "Match"}
-                  </Button>
+                  matchStatus === "none" ? (
+                    <Button variant="primary" onClick={match} disabled={matchBusy}>
+                      {matchBusy ? "Matching..." : "Match"}
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" onClick={match} disabled={matchBusy}>
+                      {matchBusy ? "..." : matchStatus === "matched" ? "Unmatch" : "Cancel request"}
+                    </Button>
+                  )
                 )}
               </div>
             </div>
