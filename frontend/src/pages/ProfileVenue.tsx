@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { clearToken } from "../lib/auth";
-import type { Venue } from "../lib/types";
+import type { Venue, VenueEvent } from "../lib/types";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel } from "../ui/Card";
@@ -65,6 +65,10 @@ export default function ProfileVenue() {
   const [ok, setOk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [events, setEvents] = useState<VenueEvent[]>([]);
+  const [newEvent, setNewEvent] = useState({ title: "", description: "", date: "" });
+  const [eventBusy, setEventBusy] = useState(false);
+  const [eventErr, setEventErr] = useState<string | null>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -96,6 +100,7 @@ export default function ProfileVenue() {
           genre_names: v.genres,
         }));
         setSelectedGenres(v.genres);
+        setEvents(v.events ?? []);
       })
       .catch(() => {});
   }, []);
@@ -132,6 +137,34 @@ export default function ProfileVenue() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const onAddEvent = async () => {
+    if (!newEvent.title.trim() || !newEvent.date) {
+      setEventErr("Title and date are required.");
+      return;
+    }
+    setEventErr(null);
+    setEventBusy(true);
+    try {
+      const created = await apiFetch<VenueEvent>("/events", {
+        method: "POST",
+        body: newEvent,
+      });
+      setEvents((prev) => [...prev, created].sort((a, b) => a.date.localeCompare(b.date)));
+      setNewEvent({ title: "", description: "", date: "" });
+    } catch (e: any) {
+      setEventErr(e.message ?? "Failed to add event");
+    } finally {
+      setEventBusy(false);
+    }
+  };
+
+  const onDeleteEvent = async (eventId: string) => {
+    try {
+      await apiFetch(`/events/${encodeURIComponent(eventId)}`, { method: "DELETE" });
+      setEvents((prev) => prev.filter((e) => e.id !== eventId));
+    } catch {}
   };
 
   const onDeleteAccount = async () => {
@@ -267,6 +300,74 @@ export default function ProfileVenue() {
             <span className="smallMuted">Tip: You can update this anytime.</span>
           </div>
         </form>
+
+        <div className="divider" />
+
+        <div>
+          <div className="sectionTitle">Events</div>
+          <p className="sectionDesc">
+            Add upcoming events for artists to see on your profile.
+          </p>
+
+          {eventErr && <div className="error" style={{ marginBottom: 12 }}>{eventErr}</div>}
+
+          <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+            <div className="grid2">
+              <Field label="Event title">
+                <input
+                  className="input"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  placeholder="e.g., Open Mic Night"
+                  maxLength={200}
+                />
+              </Field>
+              <Field label="Date">
+                <input
+                  className="input"
+                  type="date"
+                  value={newEvent.date}
+                  onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Description" hint="Optional — a short note about the event.">
+              <textarea
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                style={{ minHeight: 60 }}
+              />
+            </Field>
+            <div>
+              <Button type="button" variant="primary" onClick={onAddEvent} disabled={eventBusy}>
+                {eventBusy ? "Adding..." : "Add event"}
+              </Button>
+            </div>
+          </div>
+
+          {events.length > 0 && (
+            <div style={{ display: "grid", gap: 8 }}>
+              {events.map((ev) => (
+                <div className="card" key={ev.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div className="cardTitle">{ev.title}</div>
+                    <div className="cardMeta">{ev.date}</div>
+                    {ev.description && (
+                      <div className="smallMuted" style={{ marginTop: 4 }}>{ev.description}</div>
+                    )}
+                  </div>
+                  <Button type="button" variant="ghost" onClick={() => onDeleteEvent(ev.id)}>
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {events.length === 0 && (
+            <div className="smallMuted">No events yet.</div>
+          )}
+        </div>
 
         <div className="divider" />
 

@@ -38,3 +38,4 @@ class VenueProfile(Base):
 
     user = relationship("User", back_populates="venue_profile")
     genres = relationship(Genre, secondary=venue_genres, lazy="joined")
+    events = relationship("Event", back_populates="venue_profile", lazy="joined", order_by="Event.date")

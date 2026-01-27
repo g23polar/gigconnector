@@ -17,6 +17,13 @@ export type Artist = {
   genres: string[];
 };
 
+export type VenueEvent = {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+};
+
 export type Venue = {
   id: string;
   venue_name: string;
@@ -31,6 +38,7 @@ export type Venue = {
   max_budget: number;
   amenities: Record<string, unknown>;
   genres: string[];
+  events: VenueEvent[];
 };
 
 export type Bookmark = {

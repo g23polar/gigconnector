@@ -2,6 +2,8 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+from app.schemas.event import EventOut
+
 
 class VenueProfileIn(BaseModel):
     venue_name: str
@@ -39,3 +41,4 @@ class VenueProfileOut(BaseModel):
 
     amenities: Dict
     genres: List[str]
+    events: List[EventOut] = Field(default_factory=list)

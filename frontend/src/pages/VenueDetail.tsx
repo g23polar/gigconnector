@@ -198,6 +198,28 @@ export default function VenueDetail() {
                 </div>
               </>
             )}
+
+            {item.events && item.events.length > 0 && (
+              <>
+                <div className="divider" />
+                <div>
+                  <div className="sectionTitle">Upcoming Events</div>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {item.events.map((ev) => (
+                      <div className="card" key={ev.id}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div className="cardTitle">{ev.title}</div>
+                          <div className="cardMeta">{ev.date}</div>
+                        </div>
+                        {ev.description && (
+                          <div className="smallMuted" style={{ marginTop: 6 }}>{ev.description}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </Panel>

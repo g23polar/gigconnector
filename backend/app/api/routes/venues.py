@@ -6,6 +6,7 @@ from app.api.deps import get_current_user, get_db
 from app.api.routes._profile_utils import upsert_genres
 from app.models.user import UserRole
 from app.models.venue import VenueProfile
+from app.schemas.event import EventOut
 from app.schemas.venue import VenueProfileIn, VenueProfileOut
 
 router = APIRouter(prefix="/venue-profile", tags=["venue-profile"])
@@ -58,6 +59,7 @@ def create_or_update_venue_profile(
         max_budget=prof.max_budget,
         amenities=prof.amenities,
         genres=[g.name for g in prof.genres],
+        events=[EventOut(id=e.id, title=e.title, description=e.description, date=e.date) for e in prof.events],
     )
 
 
@@ -81,6 +83,7 @@ def get_my_venue_profile(db: Session = Depends(get_db), user=Depends(get_current
         max_budget=prof.max_budget,
         amenities=prof.amenities,
         genres=[g.name for g in prof.genres],
+        events=[EventOut(id=e.id, title=e.title, description=e.description, date=e.date) for e in prof.events],
     )
 
 
@@ -97,4 +100,5 @@ def get_venue_by_id(venue_id: str, db: Session = Depends(get_db)):
         min_budget=prof.min_budget, max_budget=prof.max_budget,
         amenities=prof.amenities,
         genres=[g.name for g in prof.genres],
+        events=[EventOut(id=e.id, title=e.title, description=e.description, date=e.date) for e in prof.events],
     )

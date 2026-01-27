@@ -12,7 +12,7 @@ from app.core.config import settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
 
 # Import models so Base.metadata is populated
-from app.models import user, artist, venue, genre, bookmark, match  # noqa: F401,E402
+from app.models import user, artist, venue, genre, bookmark, match, event  # noqa: F401,E402
 
 config = context.config
 
