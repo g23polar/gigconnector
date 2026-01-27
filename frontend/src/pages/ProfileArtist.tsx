@@ -7,6 +7,7 @@ import type { Artist } from "../lib/types";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel } from "../ui/Card";
+import LazyVideo from "../ui/LazyVideo";
 
 const POPULAR_GENRES = [
   "Rock",
@@ -90,7 +91,7 @@ const loadGooglePlaces = (apiKey: string) => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
       apiKey
-    )}&libraries=places`;
+    )}&libraries=places&loading=async`;
     script.async = true;
     script.defer = true;
     script.setAttribute(GOOGLE_PLACES_SCRIPT_ATTR, "true");
@@ -533,7 +534,7 @@ export default function ProfileArtist() {
                     <div style={{ flex: 1 }}>
                       <div className="smallMuted">{liveItem.name}</div>
                       {liveItem.type.startsWith("video/") && (
-                        <video
+                        <LazyVideo
                           controls
                           src={liveItem.url}
                           style={{ width: "100%", maxHeight: 220 }}
@@ -582,7 +583,7 @@ export default function ProfileArtist() {
                           <audio controls src={item.url} style={{ width: "100%" }} />
                         )}
                         {item.type.startsWith("video/") && (
-                          <video controls src={item.url} style={{ width: "100%", maxHeight: 220 }} />
+                          <LazyVideo controls src={item.url} style={{ width: "100%", maxHeight: 220 }} />
                         )}
                       </div>
                       <Button

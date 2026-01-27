@@ -38,24 +38,6 @@ type ArtistResult = {
   distance_miles?: number | null;
 };
 
-type MediaItem = {
-  name: string;
-  url: string;
-  type: string;
-};
-
-const extractSingleMedia = (value: unknown): MediaItem | null => {
-  if (!value || typeof value !== "object") return null;
-  const record = value as Record<string, unknown>;
-  const url = typeof record.url === "string" ? record.url : "";
-  if (!url) return null;
-  return {
-    name: typeof record.name === "string" ? record.name : "Untitled",
-    url,
-    type: typeof record.type === "string" ? record.type : "",
-  };
-};
-
 function csvToList(v: string) {
   return v.split(",").map((s) => s.trim()).filter(Boolean);
 }
@@ -260,7 +242,6 @@ export default function SearchArtists() {
       {!busy && items.length > 0 && (
         <div className="cardList">
           {items.map((a) => {
-            const liveRecording = extractSingleMedia(a.media_links?.live_recording);
             return (
               <Card key={a.id}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
@@ -285,18 +266,6 @@ export default function SearchArtists() {
                     Rate: {a.min_rate}–{a.max_rate}
                   </div>
 
-                  {liveRecording && liveRecording.type.startsWith("video/") && (
-                    <div style={{ marginTop: 12 }}>
-                      <div className="smallMuted" style={{ marginBottom: 6 }}>
-                        Live performance
-                      </div>
-                      <video
-                        controls
-                        src={liveRecording.url}
-                        style={{ width: "100%", maxHeight: 220, borderRadius: 8 }}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 <div className="btnRow" style={{ flexShrink: 0 }}>
