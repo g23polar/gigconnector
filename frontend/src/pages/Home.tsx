@@ -6,7 +6,7 @@ export default function Home() {
   const artistNext = encodeURIComponent("/profile/artist");
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
-  const words = ["musician", "venue"];
+  const words = ["musician?", "venue?"];
   const [targetIndex, setTargetIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState("");
 
@@ -49,7 +49,7 @@ export default function Home() {
             <h1 className="homeHeadline">
               A{" "}
               <span className="typeWord">{displayWord || " "}</span>
-              <span className="typeCursor">|</span>?
+              <span className="typeCursor">|</span>
             </h1>
 
             <div className="homeSubHeadline">FIND YOUR MUSICIANS / VENUE</div>
