@@ -24,6 +24,17 @@ export type VenueEvent = {
   date: string;
 };
 
+export type VenueEventPublic = {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  venue_id: string;
+  venue_name: string;
+  city: string;
+  state: string;
+};
+
 export type Venue = {
   id: string;
   venue_name: string;

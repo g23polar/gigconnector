@@ -14,3 +14,14 @@ class EventOut(BaseModel):
     title: str
     description: str
     date: date
+
+
+class EventPublicOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    date: date
+    venue_id: str
+    venue_name: str
+    city: str
+    state: str

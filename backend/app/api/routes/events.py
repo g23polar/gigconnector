@@ -1,4 +1,5 @@
 import uuid
+from datetime import date as dt_date
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -7,9 +8,35 @@ from app.api.deps import get_current_user, get_db
 from app.models.event import Event
 from app.models.user import UserRole
 from app.models.venue import VenueProfile
-from app.schemas.event import EventIn, EventOut
+from app.schemas.event import EventIn, EventOut, EventPublicOut
 
 router = APIRouter(prefix="/events", tags=["events"])
+
+
+@router.get("", response_model=list[EventPublicOut])
+def list_events(
+    include_past: bool = False,
+    db: Session = Depends(get_db),
+):
+    q = db.query(Event, VenueProfile).join(VenueProfile, VenueProfile.id == Event.venue_profile_id)
+    if not include_past:
+        q = q.filter(Event.date >= dt_date.today())
+    q = q.order_by(Event.date.asc())
+
+    rows = q.all()
+    return [
+        EventPublicOut(
+            id=e.id,
+            title=e.title,
+            description=e.description,
+            date=e.date,
+            venue_id=v.id,
+            venue_name=v.venue_name,
+            city=v.city,
+            state=v.state,
+        )
+        for e, v in rows
+    ]
 
 
 @router.post("", response_model=EventOut, status_code=status.HTTP_201_CREATED)

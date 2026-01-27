@@ -10,6 +10,7 @@ import ProfileArtist from "./pages/ProfileArtist";
 import ProfileVenue from "./pages/ProfileVenue";
 import SearchArtists from "./pages/SearchArtists";
 import SearchVenues from "./pages/SearchVenues";
+import VenueEvents from "./pages/VenueEvents";
 import Bookmarks from "./pages/Bookmarks";
 import ArtistDetail from "./pages/ArtistDetail";
 import VenueDetail from "./pages/VenueDetail";
@@ -54,7 +55,8 @@ export default function App() {
         />
 
         <Route path="/search/artists" element={<SearchArtists />} />
-<Route path="/search/venues" element={<SearchVenues />} />
+        <Route path="/search/venues" element={<SearchVenues />} />
+        <Route path="/events" element={<VenueEvents />} />
 
         <Route path="/artists/:id" element={<ArtistDetail />} />
         <Route path="/venues/:id" element={<VenueDetail />} />

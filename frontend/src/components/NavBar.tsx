@@ -26,10 +26,10 @@ export default function NavBar() {
             <Link to="/search/venues">Venues</Link>
           </>
         )}
+        <Link to="/events">Events</Link>
 
         {isAuthed() && (
           <>
-        
             <Link to="/bookmarks">Bookmarks</Link>
             <Link to="/matches">Matches</Link>
             <Link to="/matches/incoming">Requests</Link>
