@@ -107,7 +107,11 @@ export default function VenueDetail() {
   return (
     <div className="container" style={{ maxWidth: 980 }}>
       <div className="smallMuted" style={{ marginBottom: 10 }}>
-        <Link to="/search/venues">← Back to search</Link>
+        {role === "venue" ? (
+          <Link to="/events">← Back to events</Link>
+        ) : (
+          <Link to="/search/venues">← Back to search</Link>
+        )}
       </div>
 
       <Panel>

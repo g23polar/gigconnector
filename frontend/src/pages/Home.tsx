@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { isAuthed } from "../lib/auth";
+import { getRole, isAuthed } from "../lib/auth";
 
 export default function Home() {
   const artistNext = encodeURIComponent("/profile/artist");
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
+  const role = getRole();
   const words = ["musician?", "venue?"];
   const [targetIndex, setTargetIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState("");
@@ -58,9 +59,11 @@ export default function Home() {
               <a className="btn btnPrimary" href="#choose">
                 Get started
               </a>
-              <Link className="btn" to="/search/venues">
-                Browse venues
-              </Link>
+              {role !== "venue" && (
+                <Link className="btn" to="/search/venues">
+                  Browse venues
+                </Link>
+              )}
               <Link className="btn" to="/search/artists">
                 Browse artists
               </Link>

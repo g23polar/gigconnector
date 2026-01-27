@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { getRole } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
@@ -42,6 +43,7 @@ export default function Bookmarks() {
   const [resolved, setResolved] = useState<Resolved[]>([]);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const role = getRole();
 
   const counts = useMemo(() => {
     const a = raw.filter((b) => b.to_entity_type === "artist").length;
@@ -122,7 +124,7 @@ export default function Bookmarks() {
             </div>
           </div>
           <div className="btnRow">
-            <Link className="btn" to="/search/venues">Search venues</Link>
+            {role !== "venue" && <Link className="btn" to="/search/venues">Search venues</Link>}
             <Link className="btn" to="/search/artists">Search artists</Link>
           </div>
         </div>
@@ -139,7 +141,7 @@ export default function Bookmarks() {
               Browse and bookmark artists or venues to build a shortlist.
             </div>
             <div className="btnRow">
-              <Link className="btn" to="/search/venues">Browse venues</Link>
+              {role !== "venue" && <Link className="btn" to="/search/venues">Browse venues</Link>}
               <Link className="btn" to="/search/artists">Browse artists</Link>
             </div>
           </Card>

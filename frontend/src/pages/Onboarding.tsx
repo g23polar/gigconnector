@@ -214,7 +214,7 @@ export default function Onboarding() {
                   Explore and shortlist options.
                 </div>
                 <div className="btnRow">
-                  <Link className="btn" to="/search/venues">Search venues</Link>
+                  {role !== "venue" && <Link className="btn" to="/search/venues">Search venues</Link>}
                   <Link className="btn" to="/search/artists">Search artists</Link>
                 </div>
               </Card>
