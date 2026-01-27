@@ -84,6 +84,7 @@ export default function ProfileVenue() {
           ...m,
           venue_name: v.venue_name,
           description: v.description,
+          address: v.address,
           city: v.city,
           state: v.state,
           country: v.country,
