@@ -38,7 +38,7 @@ export default function NavBar() {
         <div className="navRight">
           {isAuthed() ? (
             <>
-              <Link to="/events">Your Events</Link>
+              {role === "venue" &&<Link to="/events">Your Events</Link>}
               <Link to="/onboarding">My Profile</Link>
               <button className="btn btnGhost" onClick={logout}>
                 Logout
