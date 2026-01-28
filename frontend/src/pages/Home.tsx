@@ -8,7 +8,8 @@ export default function Home() {
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
   const role = getRole();
-  const words = ["musician?", "venue?"];
+  const words = (role === "artist") ? ["venue?"] : ["musician?"];
+
   const [targetIndex, setTargetIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState("");
 
@@ -55,7 +56,9 @@ export default function Home() {
               <span className="typeCursor">|</span>
             </h1>
 
-            <div className="homeSubHeadline">FIND YOUR MUSICIANS / VENUE</div>
+            <div className="homeSubHeadline">Book your shows.</div> 
+
+            <div className="homeSubHeadline">track events, ticket sales, and earnings.</div>
 
             <div className="homeCTA">
               <a className="btn btnPrimary" href="#choose">
