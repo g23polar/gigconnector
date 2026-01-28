@@ -121,7 +121,6 @@ export default function GigDetail() {
     );
   }
 
-  const verified = gig.artist_confirmed && gig.venue_confirmed;
   const statusClass = (s: GigStatus) =>
     s === "upcoming"
       ? "pill statusUpcoming"
@@ -134,6 +133,8 @@ export default function GigDetail() {
   // but we can use created_by_user_id and the confirmation state
   const hasMetrics = gig.tickets_sold != null || gig.attendance != null;
   const isCancelled = gig.status === "cancelled";
+  const verified = gig.artist_confirmed && gig.venue_confirmed;
+
 
   return (
     <div className="container" style={{ maxWidth: 980 }}>
@@ -301,7 +302,7 @@ export default function GigDetail() {
             </form>
 
             {/* Confirm button */}
-            {hasMetrics && (
+            {hasMetrics && !isCancelled && !verified && (
               <div style={{ marginTop: 14 }}>
                 <button className="btn" onClick={confirmMetrics}>
                   Confirm Metrics
