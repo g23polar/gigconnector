@@ -1,14 +1,27 @@
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clearToken, getRole, isAuthed } from "../lib/auth";
 
 export default function NavBar() {
   const nav = useNavigate();
   const role = getRole();
+  const [matchOpen, setMatchOpen] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
 
   const logout = () => {
     clearToken();
     nav("/login");
   };
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setMatchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <div className="nav">
@@ -29,9 +42,21 @@ export default function NavBar() {
         {isAuthed() && (
           <>
             <Link to="/bookmarks">Bookmarks</Link>
-            <Link to="/matches">Matches</Link>
-            <Link to="/matches/incoming">Requests</Link>
-            <Link to="/matches/pending">Pending</Link>
+            <div className="navDropdown" ref={dropRef}>
+              <button
+                className="navDropdownToggle"
+                onClick={() => setMatchOpen((v) => !v)}
+              >
+                Matching ▾
+              </button>
+              {matchOpen && (
+                <div className="navDropdownMenu">
+                  <Link to="/matches" onClick={() => setMatchOpen(false)}>Matches</Link>
+                  <Link to="/matches/incoming" onClick={() => setMatchOpen(false)}>Requests</Link>
+                  <Link to="/matches/pending" onClick={() => setMatchOpen(false)}>Your pending requests</Link>
+                </div>
+              )}
+            </div>
           </>
         )}
 

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { getRole } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
-import type { VenueEventPublic } from "../lib/types";
+import type { VenueEvent, VenueEventPublic } from "../lib/types";
 
 function isFutureOrToday(dateStr: string, today: Date) {
   const eventDate = new Date(`${dateStr}T00:00:00`);
@@ -16,6 +17,7 @@ export default function VenueEvents() {
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [showPast, setShowPast] = useState(false);
+  const isVenue = getRole() === "venue";
 
   const today = useMemo(() => {
     const now = new Date();
@@ -25,12 +27,30 @@ export default function VenueEvents() {
   useEffect(() => {
     setErr(null);
     setBusy(true);
-    const suffix = showPast ? "?include_past=true" : "";
-    apiFetch<VenueEventPublic[]>(`/events${suffix}`, { auth: false })
-      .then(setEvents)
-      .catch((e: any) => setErr(e.message ?? "Failed to load events"))
-      .finally(() => setBusy(false));
-  }, [showPast]);
+
+    if (isVenue) {
+      apiFetch<VenueEvent[]>("/events/mine", { auth: true })
+        .then((data) =>
+          setEvents(
+            data.map((e) => ({
+              ...e,
+              venue_id: "",
+              venue_name: "",
+              city: "",
+              state: "",
+            }))
+          )
+        )
+        .catch((e: any) => setErr(e.message ?? "Failed to load events"))
+        .finally(() => setBusy(false));
+    } else {
+      const suffix = showPast ? "?include_past=true" : "";
+      apiFetch<VenueEventPublic[]>(`/events${suffix}`, { auth: false })
+        .then(setEvents)
+        .catch((e: any) => setErr(e.message ?? "Failed to load events"))
+        .finally(() => setBusy(false));
+    }
+  }, [showPast, isVenue]);
 
   const upcoming = events.filter((e) => isFutureOrToday(e.date, today));
   const past = events.filter((e) => !isFutureOrToday(e.date, today));
@@ -40,7 +60,7 @@ export default function VenueEvents() {
       <Panel>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
           <div>
-            <div className="sectionTitle">Venue Events</div>
+            <div className="sectionTitle">{isVenue ? "Your Events" : "Venue Events"}</div>
             <div className="smallMuted">
               {upcoming.length} upcoming{showPast ? ` • ${past.length} past` : ""}
             </div>
@@ -74,10 +94,10 @@ export default function VenueEvents() {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                       <div className="cardTitle">{ev.title}</div>
-                      <Link className="smallMuted" to={`/venues/${ev.venue_id}`}>View venue</Link>
-                      <Tag>Venue</Tag>
+                      {!isVenue && <Link className="smallMuted" to={`/venues/${ev.venue_id}`}>View venue</Link>}
+                      {!isVenue && <Tag>Venue</Tag>}
                     </div>
-                    <div className="cardMeta">{ev.venue_name} • {ev.city}, {ev.state}</div>
+                    {!isVenue && <div className="cardMeta">{ev.venue_name} • {ev.city}, {ev.state}</div>}
                     {ev.description && (
                       <div className="smallMuted" style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
                         {ev.description}
@@ -102,10 +122,10 @@ export default function VenueEvents() {
                     <div style={{ minWidth: 0 }}>
                       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                         <div className="cardTitle">{ev.title}</div>
-                        <Link className="smallMuted" to={`/venues/${ev.venue_id}`}>View venue</Link>
-                        <Tag>Venue</Tag>
+                        {!isVenue && <Link className="smallMuted" to={`/venues/${ev.venue_id}`}>View venue</Link>}
+                        {!isVenue && <Tag>Venue</Tag>}
                       </div>
-                      <div className="cardMeta">{ev.venue_name} • {ev.city}, {ev.state}</div>
+                      {!isVenue && <div className="cardMeta">{ev.venue_name} • {ev.city}, {ev.state}</div>}
                       {ev.description && (
                         <div className="smallMuted" style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
                           {ev.description}
