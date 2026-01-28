@@ -100,7 +100,7 @@ export default function SearchArtists() {
     syncUrl();
 
     try {
-      const data = await apiFetch<ArtistResult[]>(url, { auth: false });
+      const data = await apiFetch<ArtistResult[]>(url);
       setItems(data);
     } catch (e: any) {
       setErr(e.message ?? "Search failed");

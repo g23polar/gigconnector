@@ -108,7 +108,7 @@ export default function SearchVenues() {
     syncUrl();
 
     try {
-      const data = await apiFetch<VenueResult[]>(url, { auth: false });
+      const data = await apiFetch<VenueResult[]>(url);
       setItems(data);
     } catch (e: any) {
       setErr(e.message ?? "Search failed");

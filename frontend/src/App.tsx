@@ -54,8 +54,22 @@ export default function App() {
           }
         />
 
-        <Route path="/search/artists" element={<SearchArtists />} />
-        <Route path="/search/venues" element={<SearchVenues />} />
+        <Route
+          path="/search/artists"
+          element={
+            <ProtectedRoute>
+              <SearchArtists />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/search/venues"
+          element={
+            <ProtectedRoute>
+              <SearchVenues />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/events" element={<VenueEvents />} />
 
         <Route path="/artists/:id" element={<ArtistDetail />} />

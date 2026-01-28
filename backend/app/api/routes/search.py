@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.core.zipcode import lookup_zipcode
 from app.models.artist import ArtistProfile
 from app.models.genre import Genre
@@ -31,6 +31,7 @@ def haversine_miles(lat1: float, lng1: float, lat2: float, lng2: float) -> float
 @router.get("/artists")
 async def search_artists(
     db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
     genres: list[str] = Query(default=[]),
     min_draw: int | None = None,
     max_rate: int | None = None,
@@ -117,6 +118,7 @@ async def search_artists(
 @router.get("/venues")
 async def search_venues(
     db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
     genres: list[str] = Query(default=[]),
     min_capacity: int | None = None,
     budget_max: int | None = None,

@@ -33,12 +33,6 @@ export default function NavBar() {
         {/* Artists search for venues, venues search for artists */}
         {role === "artist" && <Link to="/search/venues">Find Venues</Link>}
         {role === "venue" && <Link to="/search/artists">Find Artists</Link>}
-        {!role && (
-          <>
-            <Link to="/search/artists">Artists</Link>
-            <Link to="/search/venues">Venues</Link>
-          </>
-        )}
         {isAuthed() && (
           <>
             <Link to="/bookmarks">Bookmarks</Link>
