@@ -14,12 +14,24 @@
 
 *{ box-sizing: border-box; }
 html{ scroll-behavior: smooth; }
+html, body, #root { min-height: 100%; }
 body{
   margin:0;
   background: var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   line-height: 1.5;
+}
+
+.appShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.appMain {
+  flex: 1;
+  display: block;
 }
 
 a{
@@ -101,11 +113,6 @@ a:hover{ opacity: .9; }
   margin-top: 40px;
   border-top: 1px solid var(--border);
   background: rgba(11,11,12,.85);
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
 }
 
 .footerInner {

@@ -27,123 +27,127 @@ import Contact from "./pages/Contact";
 export default function App() {
   return (
     <BrowserRouter>
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<Home />} />
+      <div className="appShell">
+        <NavBar />
+        <main className="appMain">
+          <Routes>
+            <Route path="/" element={<Home />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <Onboarding />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/profile/artist"
-          element={
-            <ProtectedRoute>
-              <ProfileArtist />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile/venue"
-          element={
-            <ProtectedRoute>
-              <ProfileVenue />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/profile/artist"
+              element={
+                <ProtectedRoute>
+                  <ProfileArtist />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/venue"
+              element={
+                <ProtectedRoute>
+                  <ProfileVenue />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/search/artists"
-          element={
-            <ProtectedRoute>
-              <SearchArtists />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/search/venues"
-          element={
-            <ProtectedRoute>
-              <SearchVenues />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/events" element={<VenueEvents />} />
+            <Route
+              path="/search/artists"
+              element={
+                <ProtectedRoute>
+                  <SearchArtists />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search/venues"
+              element={
+                <ProtectedRoute>
+                  <SearchVenues />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/events" element={<VenueEvents />} />
 
-        <Route path="/artists/:id" element={<ArtistDetail />} />
-        <Route path="/venues/:id" element={<VenueDetail />} />
+            <Route path="/artists/:id" element={<ArtistDetail />} />
+            <Route path="/venues/:id" element={<VenueDetail />} />
 
-        <Route
-          path="/bookmarks"
-          element={
-            <ProtectedRoute>
-              <Bookmarks />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matches"
-          element={
-            <ProtectedRoute>
-              <Matches />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matches/incoming"
-          element={
-            <ProtectedRoute>
-              <MatchIncoming />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matches/pending"
-          element={
-            <ProtectedRoute>
-              <MatchPending />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/bookmarks"
+              element={
+                <ProtectedRoute>
+                  <Bookmarks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/matches"
+              element={
+                <ProtectedRoute>
+                  <Matches />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/matches/incoming"
+              element={
+                <ProtectedRoute>
+                  <MatchIncoming />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/matches/pending"
+              element={
+                <ProtectedRoute>
+                  <MatchPending />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/gigs"
-          element={
-            <ProtectedRoute>
-              <GigsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/gigs/:id"
-          element={
-            <ProtectedRoute>
-              <GigDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/gigs"
+              element={
+                <ProtectedRoute>
+                  <GigsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gigs/:id"
+              element={
+                <ProtectedRoute>
+                  <GigDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <Footer />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </BrowserRouter>
   );
 }
