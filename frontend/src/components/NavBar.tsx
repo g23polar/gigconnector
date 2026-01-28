@@ -26,8 +26,6 @@ export default function NavBar() {
             <Link to="/search/venues">Venues</Link>
           </>
         )}
-        <Link to="/events">Events</Link>
-
         {isAuthed() && (
           <>
             <Link to="/bookmarks">Bookmarks</Link>
@@ -39,9 +37,13 @@ export default function NavBar() {
 
         <div className="navRight">
           {isAuthed() ? (
-        <><Link to="/onboarding">My Profile</Link><button className="btn btnGhost" onClick={logout}>
-              Logout
-            </button></>
+            <>
+              <Link to="/events">Your Events</Link>
+              <Link to="/onboarding">My Profile</Link>
+              <button className="btn btnGhost" onClick={logout}>
+                Logout
+              </button>
+            </>
           ) : (
             <Link className="btn btnGhost" to="/login">
               Login
