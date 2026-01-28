@@ -76,6 +76,12 @@ const buildSeries = (
     .map((entry) => ({ label: formatMonthLabel(entry.date), value: entry.value }));
 };
 
+const sumValues = <T,>(items: T[], getter: (item: T) => number | null) =>
+  items.reduce((sum, item) => {
+    const value = getter(item);
+    return value == null ? sum : sum + value;
+  }, 0);
+
 function LineChart({ data, label }: { data: SeriesPoint[]; label: string }) {
   const width = 560;
   const height = 180;
@@ -223,10 +229,6 @@ export default function Dashboard() {
     () => gigs.filter((gig) => gig.status === "upcoming"),
     [gigs]
   );
-  const cancelledGigs = useMemo(
-    () => gigs.filter((gig) => gig.status === "cancelled"),
-    [gigs]
-  );
 
   const ticketSeries = useMemo(
     () => buildSeries(completedGigs, (gig) => gig.tickets_sold),
@@ -241,79 +243,50 @@ export default function Dashboard() {
   );
 
   const metrics = useMemo(() => {
-    const totalGigs = gigs.length;
-    const verifiedGigs = completedGigs.filter(
+    const verifiedGigsList = gigs.filter(
       (gig) => gig.artist_confirmed && gig.venue_confirmed
-    ).length;
-
-    const gigsWithTickets = completedGigs.filter((gig) => gig.tickets_sold != null);
-    const totalTickets = gigsWithTickets.reduce(
-      (sum, gig) => sum + (gig.tickets_sold ?? 0),
-      0
     );
-    const avgTickets = gigsWithTickets.length
-      ? totalTickets / gigsWithTickets.length
-      : null;
+    const totalGigs = gigs.length;
+    const verifiedGigs = verifiedGigsList.length;
 
-    const gigsWithAttendance = completedGigs.filter((gig) => gig.attendance != null);
-    const totalAttendance = gigsWithAttendance.reduce(
-      (sum, gig) => sum + (gig.attendance ?? 0),
-      0
-    );
-    const avgAttendance = gigsWithAttendance.length
-      ? totalAttendance / gigsWithAttendance.length
-      : null;
+    const totalTickets = sumValues(gigs, (gig) => gig.tickets_sold);
+    const upcomingTickets = sumValues(upcomingGigs, (gig) => gig.tickets_sold);
+    const completedTickets = sumValues(completedGigs, (gig) => gig.tickets_sold);
+    const verifiedTickets = sumValues(verifiedGigsList, (gig) => gig.tickets_sold);
 
-    const gigsWithRevenue = completedGigs.filter(
-      (gig) => gig.gross_revenue_cents != null
+    const totalRevenueCents = sumValues(gigs, (gig) => gig.gross_revenue_cents);
+    const upcomingRevenueCents = sumValues(
+      upcomingGigs,
+      (gig) => gig.gross_revenue_cents
     );
-    const totalRevenueCents = gigsWithRevenue.reduce(
-      (sum, gig) => sum + (gig.gross_revenue_cents ?? 0),
-      0
+    const completedRevenueCents = sumValues(
+      completedGigs,
+      (gig) => gig.gross_revenue_cents
     );
-    const avgRevenueCents = gigsWithRevenue.length
-      ? totalRevenueCents / gigsWithRevenue.length
-      : null;
-
-    const gigsWithTicketPrice = completedGigs.filter(
-      (gig) => gig.ticket_price_cents != null
-    );
-    const avgTicketPriceCents = gigsWithTicketPrice.length
-      ? gigsWithTicketPrice.reduce(
-          (sum, gig) => sum + (gig.ticket_price_cents ?? 0),
-          0
-        ) / gigsWithTicketPrice.length
-      : null;
-
-    const partnerIds = new Set(
-      gigs.map((gig) =>
-        role === "artist" ? gig.venue_profile_id : gig.artist_profile_id
-      )
+    const verifiedRevenueCents = sumValues(
+      verifiedGigsList,
+      (gig) => gig.gross_revenue_cents
     );
 
     return {
       totalGigs,
       verifiedGigs,
       totalTickets,
-      avgTickets,
-      totalAttendance,
-      avgAttendance,
       totalRevenueCents,
-      avgRevenueCents,
-      avgTicketPriceCents,
-      uniquePartners: partnerIds.size,
-      ticketDataCount: gigsWithTickets.length,
-      attendanceDataCount: gigsWithAttendance.length,
-      revenueDataCount: gigsWithRevenue.length,
+      upcomingTickets,
+      completedTickets,
+      verifiedTickets,
+      upcomingRevenueCents,
+      completedRevenueCents,
+      verifiedRevenueCents,
     };
-  }, [gigs, completedGigs, role]);
+  }, [gigs, completedGigs, upcomingGigs]);
 
   const filteredGigs = useMemo(() => {
     if (tab === "all") return gigs;
     return gigs.filter((gig) => gig.status === tab);
   }, [gigs, tab]);
 
-  const partnerLabel = role === "artist" ? "Venue" : role === "venue" ? "Artist" : "Partner";
   const title = role === "artist" ? "Artist dashboard" : role === "venue" ? "Venue dashboard" : "Dashboard";
 
   return (
@@ -393,82 +366,47 @@ export default function Dashboard() {
                 <thead>
                   <tr>
                     <th>Metric</th>
-                    <th>Value</th>
+                    <th>Total</th>
+                    <th>Upcoming</th>
+                    <th>Completed</th>
+                    <th>Verified</th>
                   </tr>
                 </thead>
                 <tbody>
+                  <tr className="metricsSection">
+                    <td colSpan={5}>Gigs</td>
+                  </tr>
                   <tr>
-                    <td>Total gigs</td>
+                    <td>Count</td>
                     <td className="metricsValue">{metrics.totalGigs}</td>
-                  </tr>
-                  <tr>
-                    <td>Upcoming gigs</td>
                     <td className="metricsValue">{upcomingGigs.length}</td>
-                  </tr>
-                  <tr>
-                    <td>Completed gigs</td>
                     <td className="metricsValue">{completedGigs.length}</td>
-                  </tr>
-                  <tr>
-                    <td>Cancelled gigs</td>
-                    <td className="metricsValue">{cancelledGigs.length}</td>
-                  </tr>
-                  <tr>
-                    <td>Verified gigs</td>
                     <td className="metricsValue">{metrics.verifiedGigs}</td>
                   </tr>
-                  <tr>
-                    <td>Unique {partnerLabel.toLowerCase()}s</td>
-                    <td className="metricsValue">{metrics.uniquePartners}</td>
+                  <tr className="metricsSection">
+                    <td colSpan={5}>Tickets</td>
                   </tr>
                   <tr>
-                    <td>Total tickets sold</td>
+                    <td>Total sold</td>
                     <td className="metricsValue">{formatNumber(metrics.totalTickets)}</td>
+                    <td className="metricsValue">{formatNumber(metrics.upcomingTickets)}</td>
+                    <td className="metricsValue">{formatNumber(metrics.completedTickets)}</td>
+                    <td className="metricsValue">{formatNumber(metrics.verifiedTickets)}</td>
+                  </tr>
+                  <tr className="metricsSection">
+                    <td colSpan={5}>Revenue</td>
                   </tr>
                   <tr>
-                    <td>Average tickets sold</td>
-                    <td className="metricsValue">
-                      {metrics.avgTickets == null
-                        ? "--"
-                        : formatNumber(metrics.avgTickets, 1)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Total attendance</td>
-                    <td className="metricsValue">{formatNumber(metrics.totalAttendance)}</td>
-                  </tr>
-                  <tr>
-                    <td>Average attendance</td>
-                    <td className="metricsValue">
-                      {metrics.avgAttendance == null
-                        ? "--"
-                        : formatNumber(metrics.avgAttendance, 1)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Total earnings</td>
+                    <td>Gross revenue</td>
                     <td className="metricsValue">{formatCurrency(metrics.totalRevenueCents)}</td>
-                  </tr>
-                  <tr>
-                    <td>Average gross per gig</td>
-                    <td className="metricsValue">
-                      {metrics.avgRevenueCents == null
-                        ? "--"
-                        : formatCurrency(metrics.avgRevenueCents)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Average ticket price</td>
-                    <td className="metricsValue">
-                      {metrics.avgTicketPriceCents == null
-                        ? "--"
-                        : formatCurrency(metrics.avgTicketPriceCents)}
-                    </td>
+                    <td className="metricsValue">{formatCurrency(metrics.upcomingRevenueCents)}</td>
+                    <td className="metricsValue">{formatCurrency(metrics.completedRevenueCents)}</td>
+                    <td className="metricsValue">{formatCurrency(metrics.verifiedRevenueCents)}</td>
                   </tr>
                 </tbody>
               </table>
               <div className="smallMuted" style={{ marginTop: 10 }}>
-                Ticket, attendance, and revenue totals use completed gigs with metrics.
+                Totals include gigs with submitted metrics. Verified means both parties confirmed.
               </div>
             </Card>
 

@@ -584,13 +584,23 @@ label{
   border-top: 1px solid var(--border);
 }
 
-.metricsTable th:last-child,
-.metricsTable td:last-child {
+.metricsTable th:not(:first-child),
+.metricsTable td:not(:first-child) {
   text-align: right;
 }
 
 .metricsValue {
   font-weight: 700;
+}
+
+.metricsSection td {
+  padding-top: 16px;
+  padding-bottom: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
 }
 
 .chartCard {
