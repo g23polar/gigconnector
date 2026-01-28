@@ -14,7 +14,7 @@ def log_relationship_action(
     action: str,
     entity_type: str,
     entity_id: str,
-    metadata: dict[str, Any] | None = None,
+    details: dict[str, Any] | None = None,
 ) -> None:
     log = RelationshipLog(
         id=str(uuid.uuid4()),
@@ -23,6 +23,6 @@ def log_relationship_action(
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,
-        metadata=metadata or {},
+        details=details or {},
     )
     db.add(log)

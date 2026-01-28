@@ -73,7 +73,7 @@ def create_match(
         action="match_requested",
         entity_type="match",
         entity_id=match.id,
-        metadata={
+        details={
             "target_name": target_name,
             "target_role": target_role,
         },
@@ -138,7 +138,7 @@ def accept_match(
         action="match_accepted",
         entity_type="match",
         entity_id=match.id,
-        metadata={
+        details={
             "target_name": target_name,
             "target_role": target_role,
         },

@@ -185,7 +185,7 @@ def create_gig(
         action="gig_created",
         entity_type="gig",
         entity_id=gig.id,
-        metadata={
+        details={
             "gig_title": gig.title,
             "gig_date": str(gig.date),
             "target_name": target_name,
@@ -408,7 +408,7 @@ def update_metrics(
         action="gig_metrics_updated",
         entity_type="gig",
         entity_id=gig.id,
-        metadata={
+        details={
             "gig_title": gig.title,
             "gig_date": str(gig.date),
             "target_name": target_name,
@@ -469,7 +469,7 @@ def confirm_gig(
         action="gig_metrics_confirmed",
         entity_type="gig",
         entity_id=gig.id,
-        metadata={
+        details={
             "gig_title": gig.title,
             "gig_date": str(gig.date),
             "target_name": target_name,
@@ -526,7 +526,7 @@ def update_gig_status(
         action="gig_status_updated",
         entity_type="gig",
         entity_id=gig.id,
-        metadata={
+        details={
             "gig_title": gig.title,
             "gig_date": str(gig.date),
             "status": payload.status,

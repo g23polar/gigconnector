@@ -47,7 +47,7 @@ def export_relationship_logs(
         output.truncate(0)
 
         for log, target_user in rows:
-            metadata = log.metadata or {}
+            details = log.details or {}
             writer.writerow(
                 {
                     "timestamp": log.created_at.isoformat() if log.created_at else "",
@@ -56,9 +56,9 @@ def export_relationship_logs(
                     "entity_id": log.entity_id,
                     "target_user_id": log.target_user_id,
                     "target_user_email": target_user.email,
-                    "target_name": metadata.get("target_name", ""),
-                    "target_role": metadata.get("target_role", ""),
-                    "details": json.dumps(metadata, ensure_ascii=False),
+                    "target_name": details.get("target_name", ""),
+                    "target_role": details.get("target_role", ""),
+                    "details": json.dumps(details, ensure_ascii=False),
                 }
             )
             yield output.getvalue()

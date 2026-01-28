@@ -22,7 +22,7 @@ class RelationshipLog(Base):
     action: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
     entity_type: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
     entity_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

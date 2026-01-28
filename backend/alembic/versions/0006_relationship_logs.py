@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column("action", sa.String(length=80), nullable=False),
         sa.Column("entity_type", sa.String(length=40), nullable=False),
         sa.Column("entity_id", sa.String(), nullable=False),
-        sa.Column("metadata", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
+        sa.Column("details", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
