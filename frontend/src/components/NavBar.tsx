@@ -26,10 +26,12 @@ export default function NavBar() {
   return (
     <div className="nav">
       <div className="container navInner">
-        <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
-          Gig Connector
-        </Link>
-
+        {role === "artist" && <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
+          Artist Gig Connector
+        </Link>}
+        {role === "venue" && <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
+          Venue Gig Connector
+        </Link>}
         {/* Artists search for venues, venues search for artists */}
         {role === "artist" && <Link to="/search/venues">Find Venues</Link>}
         {role === "venue" && <Link to="/search/artists">Find Artists</Link>}
