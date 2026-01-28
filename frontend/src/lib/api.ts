@@ -8,7 +8,7 @@ const API_URL = rawApiUrl
     : `https://${rawApiUrl}`
   : DEFAULT_API_URL;
 
-type HttpMethod = "GET" | "POST" | "DELETE";
+type HttpMethod = "GET" | "POST" | "DELETE" | "PATCH";
 
 async function apiFetch<T>(
   path: string,

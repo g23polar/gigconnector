@@ -495,3 +495,59 @@ label{
   margin: 0;
   accent-color: #fff;
 }
+
+/* --- Gig metrics --- */
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(120,255,170,.25);
+  background: rgba(120,255,170,.08);
+  color: #d7ffe8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusUpcoming {
+  border-color: rgba(120,180,255,.25);
+  background: rgba(120,180,255,.08);
+  color: #d0e4ff;
+}
+
+.statusCompleted {
+  border-color: rgba(120,255,170,.25);
+  background: rgba(120,255,170,.08);
+  color: #d7ffe8;
+}
+
+.statusCancelled {
+  border-color: rgba(255,80,80,.25);
+  background: rgba(255,80,80,.08);
+  color: #ffd0d0;
+}
+
+.tabRow {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease;
+  font-family: inherit;
+}
+.tab:hover { background: var(--hover); }
+.tabActive {
+  background: rgba(255,255,255,.08);
+  color: var(--text);
+  border-color: rgba(255,255,255,.15);
+}

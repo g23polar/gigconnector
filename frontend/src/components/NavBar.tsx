@@ -36,6 +36,7 @@ export default function NavBar() {
         {isAuthed() && (
           <>
             <Link to="/bookmarks">Bookmarks</Link>
+            <Link to="/gigs">Gigs</Link>
             <div className="navDropdown" ref={dropRef}>
               <button
                 className="navDropdownToggle"

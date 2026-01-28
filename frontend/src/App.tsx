@@ -17,6 +17,8 @@ import VenueDetail from "./pages/VenueDetail";
 import Matches from "./pages/Matches";
 import MatchIncoming from "./pages/MatchIncoming";
 import MatchPending from "./pages/MatchPending";
+import GigsPage from "./pages/Gigs";
+import GigDetail from "./pages/GigDetail";
 
 export default function App() {
   return (
@@ -104,6 +106,23 @@ export default function App() {
           element={
             <ProtectedRoute>
               <MatchPending />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/gigs"
+          element={
+            <ProtectedRoute>
+              <GigsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gigs/:id"
+          element={
+            <ProtectedRoute>
+              <GigDetail />
             </ProtectedRoute>
           }
         />

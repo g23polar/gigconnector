@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getRole, isAuthed } from "../lib/auth";
 
+
 export default function Home() {
   const artistNext = encodeURIComponent("/profile/artist");
   const venueNext = encodeURIComponent("/profile/venue");
@@ -34,6 +35,7 @@ export default function Home() {
 
   return (
     <div>
+      
       <section className="homeHero">
         <div className="homeHeroBg" />
         <div className="homeHeroOverlay" />

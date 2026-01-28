@@ -6,7 +6,7 @@ import Button from "../ui/Button";
 import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
 import LazyVideo from "../ui/LazyVideo";
-import type { Artist } from "../lib/types";
+import type { Artist, ArtistStats } from "../lib/types";
 
 type MediaItem = {
   name: string;
@@ -55,6 +55,7 @@ export default function ArtistDetail() {
   const [matchBusy, setMatchBusy] = useState(false);
   const [bookmarkId, setBookmarkId] = useState<string | null>(null);
   const [matchStatus, setMatchStatus] = useState<"none" | "pending" | "matched">("none");
+  const [stats, setStats] = useState<ArtistStats | null>(null);
 
   const role = getRole();
   const isAuthed = !!getToken();
@@ -101,6 +102,13 @@ export default function ArtistDetail() {
         .catch(() => {});
     }
   }, [isAuthed, artistId, role]);
+
+  useEffect(() => {
+    if (!artistId) return;
+    apiFetch<ArtistStats>(`/gigs/stats/${encodeURIComponent(artistId)}`, { auth: false })
+      .then(setStats)
+      .catch(() => {});
+  }, [artistId]);
 
   const bookmark = async () => {
     if (!isAuthed) {
@@ -281,6 +289,65 @@ export default function ArtistDetail() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </>
+            )}
+
+            {stats && stats.total_gigs > 0 && (
+              <>
+                <div className="divider" />
+                <div>
+                  <div className="sectionTitle">Performance Stats</div>
+                  <div className="grid2" style={{ marginBottom: 14 }}>
+                    <div className="kpiItem">
+                      <div className="kpiLabel">Total Gigs</div>
+                      <div className="kpiValue">{stats.total_gigs}</div>
+                    </div>
+                    <div className="kpiItem">
+                      <div className="kpiLabel">Verified Gigs</div>
+                      <div className="kpiValue">{stats.verified_gigs}</div>
+                    </div>
+                    <div className="kpiItem">
+                      <div className="kpiLabel">Avg Attendance</div>
+                      <div className="kpiValue">{stats.avg_attendance ?? "---"}</div>
+                    </div>
+                    <div className="kpiItem">
+                      <div className="kpiLabel">Total Tickets Sold</div>
+                      <div className="kpiValue">{stats.total_tickets_sold ?? "---"}</div>
+                    </div>
+                    <div className="kpiItem">
+                      <div className="kpiLabel">Avg Tickets Sold</div>
+                      <div className="kpiValue">{stats.avg_tickets_sold ?? "---"}</div>
+                    </div>
+                    <div className="kpiItem">
+                      <div className="kpiLabel">Unique Venues</div>
+                      <div className="kpiValue">{stats.unique_venues_count}</div>
+                    </div>
+                  </div>
+
+                  {stats.gig_history.length > 0 && (
+                    <>
+                      <div className="sectionTitle" style={{ fontSize: 14 }}>Gig History</div>
+                      <div className="cardList">
+                        {stats.gig_history.map((h) => (
+                          <div className="card" key={h.gig_id}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <span className="cardTitle">{h.venue_name}</span>
+                                {h.verified && <span className="verifiedBadge">Verified</span>}
+                              </div>
+                              <span className="cardMeta">{h.date}</span>
+                            </div>
+                            <div className="cardMeta">
+                              {h.attendance != null && `Attendance: ${h.attendance}`}
+                              {h.attendance != null && h.tickets_sold != null && " | "}
+                              {h.tickets_sold != null && `Tickets: ${h.tickets_sold}`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             )}
