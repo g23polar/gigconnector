@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
+import { getRole, getToken } from "../lib/auth";
 import { useToast } from "../lib/useToast";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
@@ -53,6 +53,7 @@ export default function SearchArtists() {
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const { msg, show } = useToast();
+  const role = getRole();
 
   // Initialize from URL (shareable / refresh-safe)
   const [genres, setGenres] = useState<string[]>(() => parseGenresParam(params));
@@ -110,10 +111,14 @@ export default function SearchArtists() {
   };
 
   useEffect(() => {
+    if (role === "artist") {
+      nav("/search/venues");
+      return;
+    }
     // Auto-run once on load with URL params
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [role]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

@@ -64,9 +64,11 @@ export default function Home() {
                   Browse venues
                 </Link>
               )}
-              <Link className="btn" to="/search/artists">
-                Browse artists
-              </Link>
+              {role !== "artist" && (
+                <Link className="btn" to="/search/artists">
+                  Browse artists
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -215,7 +215,7 @@ export default function Onboarding() {
                 </div>
                 <div className="btnRow">
                   {role !== "venue" && <Link className="btn" to="/search/venues">Search venues</Link>}
-                  <Link className="btn" to="/search/artists">Search artists</Link>
+                  {role !== "artist" && <Link className="btn" to="/search/artists">Search artists</Link>}
                 </div>
               </Card>
 
