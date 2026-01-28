@@ -297,7 +297,7 @@ export default function GigDetail() {
                 type="submit"
                 disabled={submitting}
               >
-                {submitting ? "Submitting..." : "Submit Metrics"}
+                {submitting ? "Submitting..." : verified? "Edit Verified Metrics" : "Submit Metrics"}
               </button>
             </form>
 
