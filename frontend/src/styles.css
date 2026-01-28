@@ -551,3 +551,117 @@ label{
   color: var(--text);
   border-color: rgba(255,255,255,.15);
 }
+
+/* --- Dashboard --- */
+.dashboardGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
+.dashboardCharts {
+  display: grid;
+  gap: 12px;
+}
+
+.metricsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.metricsTable th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  padding: 6px 0;
+}
+
+.metricsTable td {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.metricsTable th:last-child,
+.metricsTable td:last-child {
+  text-align: right;
+}
+
+.metricsValue {
+  font-weight: 700;
+}
+
+.chartCard {
+  display: grid;
+  gap: 12px;
+  --chart: #ffffff;
+  --chartFade: rgba(255,255,255,.16);
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chartStats {
+  display: flex;
+  gap: 16px;
+}
+
+.chartStatLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+
+.chartStatValue {
+  font-weight: 800;
+}
+
+.chartSvg {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+
+.chartGrid {
+  stroke: rgba(255,255,255,.08);
+  stroke-width: 1;
+}
+
+.chartLine {
+  stroke: var(--chart);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.chartFill {
+  fill: var(--chartFade);
+}
+
+.chartPoint {
+  fill: var(--chart);
+}
+
+.chartAxis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chartEmpty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 16px 0 6px;
+}
+
+@media (max-width: 900px) {
+  .dashboardGrid { grid-template-columns: 1fr; }
+}

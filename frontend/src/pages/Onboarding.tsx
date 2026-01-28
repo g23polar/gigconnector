@@ -207,7 +207,7 @@ export default function Onboarding() {
             {/* Actions */}
             <div className="divider" />
 
-            <div className="grid2">
+            <div className="grid2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
               <Card>
                 <div className="cardTitle">Browse</div>
                 <div className="cardMeta" style={{ marginTop: 6, marginBottom: 12 }}>
@@ -226,6 +226,16 @@ export default function Onboarding() {
                 </div>
                 <Link className="btn btnPrimary" to="/bookmarks">View bookmarks</Link>
               </Card>
+
+              {role && (
+                <Card>
+                  <div className="cardTitle">Dashboard</div>
+                  <div className="cardMeta" style={{ marginTop: 6, marginBottom: 12 }}>
+                    Track gigs, ticket sales, and earnings.
+                  </div>
+                  <Link className="btn btnPrimary" to="/dashboard">Open dashboard</Link>
+                </Card>
+              )}
             </div>
           </>
         )}

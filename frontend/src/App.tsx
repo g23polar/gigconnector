@@ -19,6 +19,7 @@ import MatchIncoming from "./pages/MatchIncoming";
 import MatchPending from "./pages/MatchPending";
 import GigsPage from "./pages/Gigs";
 import GigDetail from "./pages/GigDetail";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   return (
@@ -123,6 +124,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <GigDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
             </ProtectedRoute>
           }
         />
