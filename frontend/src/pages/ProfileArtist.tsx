@@ -176,7 +176,7 @@ export default function ProfileArtist() {
   }, []);
 
   useEffect(() => {
-    apiFetch<Artist>(`/artist-profile/me`)
+    apiFetch<Artist>(`/artist-profile/me?include_media=false`)
       .then((a) => {
         setModel((m) => ({
           ...m,

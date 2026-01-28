@@ -36,7 +36,7 @@ export default function Onboarding() {
 
       if (meResp.role === "artist") {
         try {
-          const a = await apiFetch<Artist>("/artist-profile/me");
+          const a = await apiFetch<Artist>("/artist-profile/me?include_media=false");
           setArtist(a);
         } catch {
           setArtist(null);
@@ -53,7 +53,7 @@ export default function Onboarding() {
       // Fallback if /users/me does not exist:
       // Try to infer role by probing /artist-profile/me then /venue-profile/me
       try {
-        const a = await apiFetch<Artist>("/artist-profile/me");
+        const a = await apiFetch<Artist>("/artist-profile/me?include_media=false");
         setArtist(a);
         setMe({ id: "me", email: "—", role: "artist" });
       } catch {

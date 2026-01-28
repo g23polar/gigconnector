@@ -12,7 +12,11 @@ router = APIRouter(prefix="/artist-profile", tags=["artist-profile"])
 
 
 @router.get("/me", response_model=ArtistProfileOut)
-def get_my_artist_profile(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_my_artist_profile(
+    include_media: bool = True,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
     prof = db.query(ArtistProfile).filter(ArtistProfile.user_id == user.id).first()
     if not prof:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist profile not found")
@@ -30,7 +34,7 @@ def get_my_artist_profile(db: Session = Depends(get_db), user=Depends(get_curren
         max_rate=prof.max_rate,
         min_draw=prof.min_draw,
         max_draw=prof.max_draw,
-        media_links=prof.media_links,
+        media_links=prof.media_links if include_media else {},
         genres=[g.name for g in prof.genres],
     )
 
