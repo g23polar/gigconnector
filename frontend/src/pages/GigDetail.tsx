@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import type { Gig, GigStatus } from "../lib/types";
@@ -16,9 +16,6 @@ export default function GigDetail() {
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
 
-  // current user info
-  const [userId, setUserId] = useState<string | null>(null);
-
   // metrics form
   const [tickets, setTickets] = useState("");
   const [attendance, setAttendance] = useState("");
@@ -31,12 +28,8 @@ export default function GigDetail() {
     setBusy(true);
     setErr(null);
     try {
-      const [g, me] = await Promise.all([
-        apiFetch<Gig>(`/gigs/${id}`),
-        apiFetch<{ id: string; role: string }>("/users/me"),
-      ]);
+      const g = await apiFetch<Gig>(`/gigs/${id}`);
       setGig(g);
-      setUserId(me.id);
       // Pre-fill metrics form
       if (g.tickets_sold != null) setTickets(String(g.tickets_sold));
       if (g.attendance != null) setAttendance(String(g.attendance));

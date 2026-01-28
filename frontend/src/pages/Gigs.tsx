@@ -1,10 +1,9 @@
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { getRole } from "../lib/auth";
 import type { Artist, Gig, GigStatus, Venue } from "../lib/types";
 import { Panel, Card } from "../ui/Card";
-import Tag from "../ui/Tag";
 
 type MatchItem = {
   id: string;
