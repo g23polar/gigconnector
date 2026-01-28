@@ -2,7 +2,7 @@ import { getToken, setToken, setRole } from "./auth";
 
 const DEFAULT_API_URL = "http://localhost:8000";
 const rawApiUrl = import.meta.env.VITE_API_URL;
-const API_URL = rawApiUrl
+export const API_URL = rawApiUrl
   ? /^(https?:)?\/\//.test(rawApiUrl)
     ? rawApiUrl
     : `https://${rawApiUrl}`

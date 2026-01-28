@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { apiFetch } from "../lib/api";
-import { clearToken } from "../lib/auth";
+import { API_URL, apiFetch } from "../lib/api";
+import { clearToken, getToken } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
@@ -18,12 +18,43 @@ export default function Onboarding() {
 
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [downloadBusy, setDownloadBusy] = useState(false);
+  const [downloadErr, setDownloadErr] = useState<string | null>(null);
 
   const role = me?.role ?? (artist ? "artist" : venue ? "venue" : null);
 
   const logout = () => {
     clearToken();
     nav("/");
+  };
+
+  const downloadLogs = async () => {
+    setDownloadErr(null);
+    setDownloadBusy(true);
+    try {
+      const token = getToken();
+      if (!token) throw new Error("Not authenticated.");
+
+      const res = await fetch(`${API_URL}/relationship-logs/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to download logs (${res.status}).`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "relationship-history.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      setDownloadErr(error?.message ?? "Failed to download logs.");
+    } finally {
+      setDownloadBusy(false);
+    }
   };
 
   const load = async () => {
@@ -236,6 +267,21 @@ export default function Onboarding() {
                   <Link className="btn btnPrimary" to="/dashboard">Open dashboard</Link>
                 </Card>
               )}
+
+              <Card>
+                <div className="cardTitle">Relationship history</div>
+                <div className="cardMeta" style={{ marginTop: 6, marginBottom: 12 }}>
+                  Download your relationship history (CSV).
+                </div>
+                <Button variant="primary" onClick={downloadLogs} disabled={downloadBusy}>
+                  {downloadBusy ? "Preparing..." : "Download CSV"}
+                </Button>
+                {downloadErr && (
+                  <div className="error" style={{ marginTop: 10 }}>
+                    {downloadErr}
+                  </div>
+                )}
+              </Card>
             </div>
           </>
         )}

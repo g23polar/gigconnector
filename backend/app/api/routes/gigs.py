@@ -11,6 +11,7 @@ from app.models.gig import Gig, GigStatus
 from app.models.match import Match
 from app.models.user import User, UserRole
 from app.models.venue import VenueProfile
+from app.services.relationship_log import log_relationship_action
 from app.schemas.gig import (
     ArtistStatsOut,
     GigCreateIn,
@@ -105,6 +106,12 @@ def _assert_participant(db: Session, gig: Gig, user: User):
     return artist_prof, venue_prof
 
 
+def _get_target_info(user: User, artist_prof: ArtistProfile, venue_prof: VenueProfile) -> tuple:
+    if user.id == artist_prof.user_id:
+        return (venue_prof.user_id, venue_prof.venue_name, "venue")
+    return (artist_prof.user_id, artist_prof.name, "artist")
+
+
 # ---------------------------------------------------------------------------
 # 1) POST /gigs  –  Create a gig
 # ---------------------------------------------------------------------------
@@ -168,6 +175,23 @@ def create_gig(
         created_by_user_id=user.id,
     )
     db.add(gig)
+    target_user_id, target_name, target_role = _get_target_info(
+        user, artist_prof, venue_prof
+    )
+    log_relationship_action(
+        db,
+        actor_user_id=user.id,
+        target_user_id=target_user_id,
+        action="gig_created",
+        entity_type="gig",
+        entity_id=gig.id,
+        metadata={
+            "gig_title": gig.title,
+            "gig_date": str(gig.date),
+            "target_name": target_name,
+            "target_role": target_role,
+        },
+    )
     db.commit()
     db.refresh(gig)
 
@@ -365,6 +389,34 @@ def update_metrics(
     else:
         gig.artist_confirmed = False
 
+    target_user_id, target_name, target_role = _get_target_info(
+        user, artist_prof, venue_prof
+    )
+    changed = {}
+    if payload.tickets_sold is not None:
+        changed["tickets_sold"] = payload.tickets_sold
+    if payload.attendance is not None:
+        changed["attendance"] = payload.attendance
+    if payload.ticket_price_cents is not None:
+        changed["ticket_price_cents"] = payload.ticket_price_cents
+    if payload.gross_revenue_cents is not None:
+        changed["gross_revenue_cents"] = payload.gross_revenue_cents
+    log_relationship_action(
+        db,
+        actor_user_id=user.id,
+        target_user_id=target_user_id,
+        action="gig_metrics_updated",
+        entity_type="gig",
+        entity_id=gig.id,
+        metadata={
+            "gig_title": gig.title,
+            "gig_date": str(gig.date),
+            "target_name": target_name,
+            "target_role": target_role,
+            "changes": changed,
+        },
+    )
+
     db.commit()
     db.refresh(gig)
     return _gig_out(gig, aname, vname)
@@ -407,6 +459,24 @@ def confirm_gig(
     else:
         gig.venue_confirmed = True
 
+    target_user_id, target_name, target_role = _get_target_info(
+        user, artist_prof, venue_prof
+    )
+    log_relationship_action(
+        db,
+        actor_user_id=user.id,
+        target_user_id=target_user_id,
+        action="gig_metrics_confirmed",
+        entity_type="gig",
+        entity_id=gig.id,
+        metadata={
+            "gig_title": gig.title,
+            "gig_date": str(gig.date),
+            "target_name": target_name,
+            "target_role": target_role,
+        },
+    )
+
     db.commit()
     db.refresh(gig)
     return _gig_out(gig, aname, vname)
@@ -446,6 +516,24 @@ def update_gig_status(
         )
 
     gig.status = GigStatus(payload.status)
+    target_user_id, target_name, target_role = _get_target_info(
+        user, artist_prof, venue_prof
+    )
+    log_relationship_action(
+        db,
+        actor_user_id=user.id,
+        target_user_id=target_user_id,
+        action="gig_status_updated",
+        entity_type="gig",
+        entity_id=gig.id,
+        metadata={
+            "gig_title": gig.title,
+            "gig_date": str(gig.date),
+            "status": payload.status,
+            "target_name": target_name,
+            "target_role": target_role,
+        },
+    )
     db.commit()
     db.refresh(gig)
     return _gig_out(gig, aname, vname)

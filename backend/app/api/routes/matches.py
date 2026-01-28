@@ -9,6 +9,7 @@ from app.models.match import Match
 from app.models.user import UserRole
 from app.models.venue import VenueProfile
 from app.schemas.match import MatchCreateIn, MatchOut
+from app.services.relationship_log import log_relationship_action
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
@@ -38,11 +39,15 @@ def create_match(
         if not profile:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
         target_user_id = profile.user_id
+        target_name = profile.name
+        target_role = "artist"
     else:
         profile = db.get(VenueProfile, payload.target_id)
         if not profile:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Venue not found")
         target_user_id = profile.user_id
+        target_name = profile.venue_name
+        target_role = "venue"
 
     if target_user_id == user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot match with yourself")
@@ -61,6 +66,18 @@ def create_match(
         to_user_id=target_user_id,
     )
     db.add(match)
+    log_relationship_action(
+        db,
+        actor_user_id=user.id,
+        target_user_id=target_user_id,
+        action="match_requested",
+        entity_type="match",
+        entity_id=match.id,
+        metadata={
+            "target_name": target_name,
+            "target_role": target_role,
+        },
+    )
     db.commit()
     return {"ok": True, "id": match.id, "matched": has_reciprocal(db, user.id, target_user_id)}
 
@@ -82,11 +99,15 @@ def accept_match(
         if not profile:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
         target_user_id = profile.user_id
+        target_name = profile.name
+        target_role = "artist"
     else:
         profile = db.get(VenueProfile, payload.target_id)
         if not profile:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Venue not found")
         target_user_id = profile.user_id
+        target_name = profile.venue_name
+        target_role = "venue"
 
     incoming = (
         db.query(Match)
@@ -110,6 +131,18 @@ def accept_match(
         to_user_id=target_user_id,
     )
     db.add(match)
+    log_relationship_action(
+        db,
+        actor_user_id=user.id,
+        target_user_id=target_user_id,
+        action="match_accepted",
+        entity_type="match",
+        entity_id=match.id,
+        metadata={
+            "target_name": target_name,
+            "target_role": target_role,
+        },
+    )
     db.commit()
     return {"ok": True, "id": match.id, "matched": True}
 
