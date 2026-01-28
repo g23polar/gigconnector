@@ -24,6 +24,12 @@ export default function VenueDetail() {
   const isAuthed = !!getToken();
 
   const endpoint = useMemo(() => `/venue-profile/${encodeURIComponent(venueId)}`, [venueId]);
+  const upcomingEvents = useMemo(() => {
+    if (!item?.events) return [];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return item.events.filter((ev) => new Date(`${ev.date}T00:00:00`) >= today);
+  }, [item?.events]);
 
   useEffect(() => {
     if (!venueId) return;
@@ -203,13 +209,13 @@ export default function VenueDetail() {
               </>
             )}
 
-            {item.events && item.events.length > 0 && (
+            {upcomingEvents.length > 0 && (
               <>
                 <div className="divider" />
                 <div>
                   <div className="sectionTitle">Upcoming Events</div>
                   <div style={{ display: "grid", gap: 8 }}>
-                    {item.events.map((ev) => (
+                    {upcomingEvents.map((ev) => (
                       <div className="card" key={ev.id}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                           <div className="cardTitle">{ev.title}</div>
