@@ -17,15 +17,6 @@ export default function About() {
           </div>
         </div>
       </Panel>
-
-
-      <Panel>
-        <div>className="card"{">"}
-          <div className="cardMeta" style={{ marginTop: 8 }}>
-              https://github.com/g23polar/gigconnector
-          </div>
-        </div>
-      </Panel>
     </div>
   );
 }
