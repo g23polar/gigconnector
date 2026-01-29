@@ -26,15 +26,19 @@ export default function NavBar() {
   return (
     <div className="nav">
       <div className="container navInner">
-        {role === "artist" && <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
-          Artist | Gig Connector
-        </Link>}
-        {role === "venue" && <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
-          Venue | Gig Connector
-        </Link>}
+        {(role === "artist" || role === "venue") && (
+          <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
+            {role === "artist" ? "Artist | Gig Connector" : "Venue | Gig Connector"}
+          </Link>
+        )}
+        {role === "admin" && (
+          <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
+            Gig Connector Admin
+          </Link>
+        )}
         {/* Artists search for venues, venues search for artists */}
-        {role === "artist" && <Link to="/search/venues">Find Venues</Link>}
-        {role === "venue" && <Link to="/search/artists">Find Artists</Link>}
+        {(role === "artist" || role === "admin") && <Link to="/search/venues">Find Venues</Link>}
+        {(role === "venue" || role === "admin") && <Link to="/search/artists">Find Artists</Link>}
         {isAuthed() && (
           <>
             <div className="navDropdown" ref={dropRef}>

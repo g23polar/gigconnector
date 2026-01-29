@@ -1,4 +1,4 @@
-export type Role = "artist" | "venue";
+export type Role = "artist" | "venue" | "admin";
 
 export type Artist = {
   id: string;

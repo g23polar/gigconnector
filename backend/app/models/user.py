@@ -11,6 +11,7 @@ from app.db.base import Base
 class UserRole(str, enum.Enum):
     artist = "artist"
     venue = "venue"
+    admin = "admin"
 
 
 class User(Base):

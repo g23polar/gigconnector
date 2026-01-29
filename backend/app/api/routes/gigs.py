@@ -60,6 +60,8 @@ def _get_user_profile_ids(db: Session, user: User) -> tuple:
             .first()
         )
         return (row[0] if row else None, None)
+    if user.role == UserRole.admin:
+        return (None, None)
     else:
         row = (
             db.query(VenueProfile.id)
@@ -98,6 +100,8 @@ def _assert_participant(db: Session, gig: Gig, user: User):
     """Raise 403 if user is not the artist or venue for this gig."""
     artist_prof = db.get(ArtistProfile, gig.artist_profile_id)
     venue_prof = db.get(VenueProfile, gig.venue_profile_id)
+    if user.role == UserRole.admin:
+        return artist_prof, venue_prof
     if user.id != artist_prof.user_id and user.id != venue_prof.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -136,7 +140,7 @@ def create_gig(
         )
 
     # User must be either the artist or the venue
-    if user.id != artist_prof.user_id and user.id != venue_prof.user_id:
+    if user.role != UserRole.admin and user.id != artist_prof.user_id and user.id != venue_prof.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not part of this gig",

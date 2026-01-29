@@ -29,10 +29,11 @@ def create_match(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role == UserRole.artist and payload.target_type != "venue":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only match with venues")
-    if user.role == UserRole.venue and payload.target_type != "artist":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only match with artists")
+    if user.role != UserRole.admin:
+        if user.role == UserRole.artist and payload.target_type != "venue":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only match with venues")
+        if user.role == UserRole.venue and payload.target_type != "artist":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only match with artists")
 
     if payload.target_type == "artist":
         profile = db.get(ArtistProfile, payload.target_id)
@@ -89,10 +90,11 @@ def accept_match(
     user=Depends(get_current_user),
 ):
     # This creates a reciprocal match if there's an incoming request.
-    if user.role == UserRole.artist and payload.target_type != "venue":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only match with venues")
-    if user.role == UserRole.venue and payload.target_type != "artist":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only match with artists")
+    if user.role != UserRole.admin:
+        if user.role == UserRole.artist and payload.target_type != "venue":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only match with venues")
+        if user.role == UserRole.venue and payload.target_type != "artist":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only match with artists")
 
     if payload.target_type == "artist":
         profile = db.get(ArtistProfile, payload.target_id)
@@ -217,10 +219,11 @@ def delete_match(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role == UserRole.artist and payload.target_type != "venue":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only unmatch with venues")
-    if user.role == UserRole.venue and payload.target_type != "artist":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only unmatch with artists")
+    if user.role != UserRole.admin:
+        if user.role == UserRole.artist and payload.target_type != "venue":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Artists can only unmatch with venues")
+        if user.role == UserRole.venue and payload.target_type != "artist":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Venues can only unmatch with artists")
 
     if payload.target_type == "artist":
         profile = db.get(ArtistProfile, payload.target_id)

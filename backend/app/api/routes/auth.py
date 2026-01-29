@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.auth import RegisterIn, TokenOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -30,6 +30,8 @@ def login_json(payload: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
 
 @router.post("/register", response_model=TokenOut)
 def register(payload: RegisterIn, db: Session = Depends(get_db)) -> TokenOut:
+    if payload.role == UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin accounts cannot be self-registered")
     existing = db.query(User).filter(User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -100,6 +102,8 @@ def google_auth(payload: GoogleAuthIn, db: Session = Depends(get_db)) -> TokenOu
     if not user:
         if payload.role is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role required for Google sign-up")
+        if payload.role == UserRole.admin:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin accounts cannot be self-registered")
         pw_hash = hash_password(str(uuid.uuid4()))
         user = User(id=str(uuid.uuid4()), email=email, password_hash=pw_hash, role=payload.role)
         db.add(user)

@@ -45,7 +45,7 @@ def create_event(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role != UserRole.venue:
+    if user.role not in (UserRole.venue, UserRole.admin):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only venues can create events",
@@ -82,7 +82,7 @@ def list_my_events(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role != UserRole.venue:
+    if user.role not in (UserRole.venue, UserRole.admin):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only venues can view their events",
@@ -110,7 +110,7 @@ def delete_event(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role != UserRole.venue:
+    if user.role not in (UserRole.venue, UserRole.admin):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only venues can delete events",

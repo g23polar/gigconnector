@@ -7,7 +7,7 @@ import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
 import type { Artist, Venue } from "../lib/types";
 
-type Me = { id: string; email: string; role: "artist" | "venue" };
+type Me = { id: string; email: string; role: "artist" | "venue" | "admin" };
 
 export default function Onboarding() {
   const nav = useNavigate();

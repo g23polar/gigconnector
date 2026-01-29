@@ -44,7 +44,7 @@ def create_or_update_artist_profile(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role != UserRole.artist:
+    if user.role not in (UserRole.artist, UserRole.admin):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only artists can edit artist profile")
 
     prof = db.query(ArtistProfile).filter(ArtistProfile.user_id == user.id).first()

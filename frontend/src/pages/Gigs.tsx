@@ -18,6 +18,7 @@ type Tab = "upcoming" | "completed" | "all";
 
 export default function Gigs() {
   const role = getRole();
+  const isAdmin = role === "admin";
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -140,15 +141,17 @@ export default function Gigs() {
               Track shows with your matches and build verified stats.
             </p>
           </div>
-          <button
-            className="btn btnPrimary"
-            onClick={() => setShowCreate((v) => !v)}
-          >
-            {showCreate ? "Cancel" : "Create Gig"}
-          </button>
+          {!isAdmin && (
+            <button
+              className="btn btnPrimary"
+              onClick={() => setShowCreate((v) => !v)}
+            >
+              {showCreate ? "Cancel" : "Create Gig"}
+            </button>
+          )}
         </div>
 
-        {showCreate && (
+        {showCreate && !isAdmin && (
           <>
             <div className="divider" />
             <form onSubmit={onSubmit}>

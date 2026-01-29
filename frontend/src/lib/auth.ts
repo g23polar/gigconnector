@@ -9,13 +9,13 @@ export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
 }
 
-export function getRole(): "artist" | "venue" | null {
+export function getRole(): "artist" | "venue" | "admin" | null {
   const role = localStorage.getItem(ROLE_KEY);
-  if (role === "artist" || role === "venue") return role;
+  if (role === "artist" || role === "venue" || role === "admin") return role;
   return null;
 }
 
-export function setRole(role: "artist" | "venue") {
+export function setRole(role: "artist" | "venue" | "admin") {
   localStorage.setItem(ROLE_KEY, role);
 }
 

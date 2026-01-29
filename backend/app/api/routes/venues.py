@@ -18,7 +18,7 @@ def create_or_update_venue_profile(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.role != UserRole.venue:
+    if user.role not in (UserRole.venue, UserRole.admin):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only venues can edit venue profile")
 
     prof = db.query(VenueProfile).filter(VenueProfile.user_id == user.id).first()
