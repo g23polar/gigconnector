@@ -98,9 +98,11 @@ a:hover{ opacity: .9; }
 .navDropdownMenu a{
   padding: 8px 14px;
   white-space: nowrap;
+  opacity: 1;
 }
 .navDropdownMenu a:hover{
   background: var(--border);
+  opacity: 1;
 }
 
 .navRight{

@@ -33,7 +33,7 @@ export default function NavBar() {
         )}
         {role === "admin" && (
           <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
-            Gig Connector Admin
+            Admin | Gig Connector
           </Link>
         )}
         {/* Artists search for venues, venues search for artists */}
