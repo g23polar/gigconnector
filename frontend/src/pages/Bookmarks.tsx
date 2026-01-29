@@ -19,7 +19,6 @@ type ArtistResult = {
   city: string;
   state: string;
   min_rate: number;
-  max_rate: number;
   genres: string[];
 };
 
@@ -29,7 +28,6 @@ type VenueResult = {
   city: string;
   state: string;
   capacity: number;
-  min_budget: number;
   max_budget: number;
   genres: string[];
 };
@@ -169,7 +167,7 @@ export default function Bookmarks() {
                             ))}
                           </div>
                           <div className="smallMuted" style={{ marginTop: 10 }}>
-                            Rate: {a.min_rate}–{a.max_rate}
+                            Minimum rate: {a.min_rate}
                           </div>
                         </div>
                         <div className="btnRow" style={{ flexShrink: 0 }}>
@@ -207,7 +205,7 @@ export default function Bookmarks() {
                           ))}
                         </div>
                         <div className="smallMuted" style={{ marginTop: 10 }}>
-                          Capacity: {v.capacity} • Budget: {v.min_budget}–{v.max_budget}
+                          Capacity: {v.capacity} • Max budget: {v.max_budget}
                         </div>
                       </div>
                       <div className="btnRow" style={{ flexShrink: 0 }}>

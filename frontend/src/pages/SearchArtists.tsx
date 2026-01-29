@@ -32,7 +32,6 @@ type ArtistResult = {
   city: string;
   state: string;
   min_rate: number;
-  max_rate: number;
   genres: string[];
   media_links: Record<string, unknown>;
   distance_miles?: number | null;
@@ -227,7 +226,7 @@ export default function SearchArtists() {
           </Field>
 
           <div className="grid2" style={{ gridColumn: "1 / -1" }}>
-            <Field label="Max rate">
+            <Field label="Budget max">
               <input className="input" value={maxRate} onChange={(e) => setMaxRate(e.target.value)} />
             </Field>
             <Field label="Min verified gigs">
@@ -296,7 +295,7 @@ export default function SearchArtists() {
                   </div>
 
                   <div className="smallMuted" style={{ marginTop: 10 }}>
-                    Rate: {a.min_rate}–{a.max_rate}
+                    Minimum rate: {a.min_rate}
                   </div>
 
                   {a.verified_gig_count > 0 && (
@@ -336,7 +335,7 @@ export default function SearchArtists() {
         <Panel>
           <div className="sectionTitle">No results</div>
           <p className="sectionDesc">
-            Try broader genres (e.g., <span className="kbd">rock, indie</span>), increase distance, or remove rate constraints.
+            Try broader genres (e.g., <span className="kbd">rock, indie</span>), increase distance, or relax budget constraints.
           </p>
         </Panel>
       )}

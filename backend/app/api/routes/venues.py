@@ -34,7 +34,6 @@ def create_or_update_venue_profile(
     prof.country = payload.country
 
     prof.capacity = payload.capacity
-    prof.min_budget = payload.min_budget
     prof.max_budget = payload.max_budget
     prof.amenities = payload.amenities
 
@@ -55,7 +54,6 @@ def create_or_update_venue_profile(
         country=prof.country,
         zip_code=prof.zip_code,
         capacity=prof.capacity,
-        min_budget=prof.min_budget,
         max_budget=prof.max_budget,
         amenities=prof.amenities,
         genres=[g.name for g in prof.genres],
@@ -79,7 +77,6 @@ def get_my_venue_profile(db: Session = Depends(get_db), user=Depends(get_current
         country=prof.country,
         zip_code=prof.zip_code,
         capacity=prof.capacity,
-        min_budget=prof.min_budget,
         max_budget=prof.max_budget,
         amenities=prof.amenities,
         genres=[g.name for g in prof.genres],
@@ -97,7 +94,7 @@ def get_venue_by_id(venue_id: str, db: Session = Depends(get_db)):
         address=prof.address, city=prof.city, state=prof.state, country=prof.country,
         zip_code=prof.zip_code,
         capacity=prof.capacity,
-        min_budget=prof.min_budget, max_budget=prof.max_budget,
+        max_budget=prof.max_budget,
         amenities=prof.amenities,
         genres=[g.name for g in prof.genres],
         events=[EventOut(id=e.id, title=e.title, description=e.description, date=e.date) for e in prof.events],

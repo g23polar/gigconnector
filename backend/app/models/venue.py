@@ -28,7 +28,6 @@ class VenueProfile(Base):
     zip_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, index=True)
 
     capacity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    min_budget: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_budget: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     amenities: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)

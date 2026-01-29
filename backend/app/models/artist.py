@@ -29,7 +29,6 @@ class ArtistProfile(Base):
     travel_radius_miles: Mapped[int] = mapped_column(Integer, default=25, nullable=False)
 
     min_rate: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    max_rate: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     min_draw: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_draw: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

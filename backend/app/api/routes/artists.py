@@ -31,7 +31,6 @@ def get_my_artist_profile(
         zip_code=prof.zip_code,
         travel_radius_miles=prof.travel_radius_miles,
         min_rate=prof.min_rate,
-        max_rate=prof.max_rate,
         min_draw=prof.min_draw,
         max_draw=prof.max_draw,
         media_links=prof.media_links if include_media else {},
@@ -61,7 +60,6 @@ def create_or_update_artist_profile(
 
     prof.travel_radius_miles = payload.travel_radius_miles
     prof.min_rate = payload.min_rate
-    prof.max_rate = payload.max_rate
     prof.min_draw = payload.min_draw
     prof.max_draw = payload.max_draw
     prof.media_links = payload.media_links
@@ -83,7 +81,6 @@ def create_or_update_artist_profile(
         zip_code=prof.zip_code,
         travel_radius_miles=prof.travel_radius_miles,
         min_rate=prof.min_rate,
-        max_rate=prof.max_rate,
         min_draw=prof.min_draw,
         max_draw=prof.max_draw,
         media_links=prof.media_links,
@@ -101,7 +98,7 @@ def get_artist_by_id(artist_id: str, db: Session = Depends(get_db)):
         city=prof.city, state=prof.state, country=prof.country,
         zip_code=prof.zip_code,
         travel_radius_miles=prof.travel_radius_miles,
-        min_rate=prof.min_rate, max_rate=prof.max_rate,
+        min_rate=prof.min_rate,
         min_draw=prof.min_draw, max_draw=prof.max_draw,
         media_links=prof.media_links,
         genres=[g.name for g in prof.genres],

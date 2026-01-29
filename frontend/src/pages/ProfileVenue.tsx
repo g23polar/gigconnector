@@ -35,7 +35,6 @@ type VenueIn = {
   country: string;
   zip_code?: string | null;
   capacity: number;
-  min_budget: number;
   max_budget: number;
   amenities: Record<string, unknown>;
   genre_names: string[];
@@ -52,7 +51,6 @@ export default function ProfileVenue() {
     country: "US",
     zip_code: null,
     capacity: 0,
-    min_budget: 0,
     max_budget: 0,
     amenities: {},
     genre_names: [],
@@ -94,7 +92,6 @@ export default function ProfileVenue() {
           country: v.country,
           zip_code: v.zip_code ?? null,
           capacity: v.capacity,
-          min_budget: v.min_budget,
           max_budget: v.max_budget,
           amenities: v.amenities,
           genre_names: v.genres,
@@ -284,10 +281,7 @@ export default function ProfileVenue() {
             </Field>
 
             <div className="grid2">
-              <Field label="Budget (min)">
-                <input className="input" type="number" value={model.min_budget} onChange={(e) => setModel({ ...model, min_budget: Number(e.target.value) })} />
-              </Field>
-              <Field label="Budget (max)">
+              <Field label="Maximum budget">
                 <input className="input" type="number" value={model.max_budget} onChange={(e) => setModel({ ...model, max_budget: Number(e.target.value) })} />
               </Field>
             </div>

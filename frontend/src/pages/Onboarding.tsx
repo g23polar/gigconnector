@@ -163,7 +163,7 @@ export default function Onboarding() {
                     </div>
 
                     <div className="smallMuted">
-                      Rate: {artist.min_rate}–{artist.max_rate} • Travel:{" "}
+                      Minimum rate: {artist.min_rate} • Travel:{" "}
                       {artist.travel_radius_miles} mi
                     </div>
                     {String(artist.media_links?.spotify ?? "").trim() && (
@@ -213,7 +213,7 @@ export default function Onboarding() {
                     </div>
 
                     <div className="smallMuted">
-                      Capacity: {venue.capacity} • Budget: {venue.min_budget}–{venue.max_budget}
+                      Capacity: {venue.capacity} • Max budget: {venue.max_budget}
                     </div>
                   </div>
                 ) : (

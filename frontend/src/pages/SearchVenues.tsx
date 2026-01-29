@@ -32,7 +32,6 @@ type VenueResult = {
   city: string;
   state: string;
   capacity: number;
-  min_budget: number;
   max_budget: number;
   genres: string[];
   amenities: Record<string, unknown>;
@@ -234,7 +233,7 @@ export default function SearchVenues() {
             <Field label="Min capacity">
               <input className="input" value={minCapacity} onChange={(e) => setMinCapacity(e.target.value)} />
             </Field>
-            <Field label="Budget max">
+            <Field label="Max budget">
               <input className="input" value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} />
             </Field>
           </div>
@@ -281,7 +280,7 @@ export default function SearchVenues() {
                   </div>
 
                   <div className="smallMuted" style={{ marginTop: 10 }}>
-                    Capacity: {v.capacity} • Budget: {v.min_budget}–{v.max_budget}
+                    Capacity: {v.capacity} • Max budget: {v.max_budget}
                   </div>
                 </div>
 

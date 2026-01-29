@@ -179,7 +179,7 @@ export default function VenueDetail() {
                 <div className="cardMeta" style={{ marginTop: 8 }}>
                   Capacity: {item.capacity}
                   <br />
-                  Budget: {item.min_budget}–{item.max_budget}
+                  Max budget: {item.max_budget}
                 </div>
               </div>
 

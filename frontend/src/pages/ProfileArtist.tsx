@@ -36,7 +36,6 @@ type ArtistIn = {
   zip_code?: string | null;
   travel_radius_miles: number;
   min_rate: number;
-  max_rate: number;
   min_draw: number;
   max_draw: number;
   media_links: Record<string, unknown>;
@@ -148,7 +147,6 @@ export default function ProfileArtist() {
     zip_code: null,
     travel_radius_miles: 25,
     min_rate: 0,
-    max_rate: 0,
     min_draw: 0,
     max_draw: 0,
     media_links: {},
@@ -188,7 +186,6 @@ export default function ProfileArtist() {
           zip_code: a.zip_code ?? null,
           travel_radius_miles: a.travel_radius_miles,
           min_rate: a.min_rate,
-          max_rate: a.max_rate,
           min_draw: a.min_draw,
           max_draw: a.max_draw,
           media_links: a.media_links,
@@ -655,11 +652,8 @@ export default function ProfileArtist() {
           <div>
             <div className="sectionTitle">Commercials</div>
             <div className="grid2">
-              <Field label="Rate range (min)">
+              <Field label="Minimum rate">
                 <input className="input" type="number" value={model.min_rate} onChange={(e) => setModel({ ...model, min_rate: Number(e.target.value) })} />
-              </Field>
-              <Field label="Rate range (max)">
-                <input className="input" type="number" value={model.max_rate} onChange={(e) => setModel({ ...model, max_rate: Number(e.target.value) })} />
               </Field>
             </div>
 

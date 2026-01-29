@@ -17,7 +17,6 @@ class VenueProfileIn(BaseModel):
     zip_code: Optional[str] = None
 
     capacity: int = 0
-    min_budget: int = 0
     max_budget: int = 0
 
     amenities: Dict = Field(default_factory=dict)
@@ -36,7 +35,6 @@ class VenueProfileOut(BaseModel):
     zip_code: Optional[str] = None
 
     capacity: int
-    min_budget: int
     max_budget: int
 
     amenities: Dict

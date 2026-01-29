@@ -16,7 +16,6 @@ class ArtistProfileIn(BaseModel):
     travel_radius_miles: int = 25
 
     min_rate: int = 0
-    max_rate: int = 0
 
     min_draw: int = 0
     max_draw: int = 0
@@ -38,7 +37,6 @@ class ArtistProfileOut(BaseModel):
     travel_radius_miles: int
 
     min_rate: int
-    max_rate: int
 
     min_draw: int
     max_draw: int

@@ -221,9 +221,9 @@ export default function ArtistDetail() {
             <div className="grid2">
               <div className="card">
                 <div className="cardTitle">Commercials</div>
-                <div className="cardMeta" style={{ marginTop: 8 }}>
-                  Rate: {item.min_rate}–{item.max_rate}
-                </div>
+                  <div className="cardMeta" style={{ marginTop: 8 }}>
+                    Minimum rate: {item.min_rate}
+                  </div>
               </div>
 
               <div className="card">

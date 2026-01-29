@@ -125,7 +125,6 @@ async def search_artists(
             "zip_code": a.zip_code,
             "distance_miles": round(dist, 1) if dist is not None else None,
             "min_rate": a.min_rate,
-            "max_rate": a.max_rate,
             "min_draw": a.min_draw,
             "max_draw": a.max_draw,
             "genres": [g.name for g in a.genres],
@@ -172,7 +171,7 @@ async def search_venues(
         q = q.filter(VenueProfile.capacity >= min_capacity)
 
     if budget_max is not None:
-        q = q.filter(or_(VenueProfile.min_budget == 0, VenueProfile.min_budget <= budget_max))
+        q = q.filter(VenueProfile.max_budget >= budget_max)
 
     # Lookup searcher's coordinates from zip code
     search_coords = None
@@ -212,7 +211,6 @@ async def search_venues(
             "zip_code": v.zip_code,
             "distance_miles": round(dist, 1) if dist is not None else None,
             "capacity": v.capacity,
-            "min_budget": v.min_budget,
             "max_budget": v.max_budget,
             "genres": [g.name for g in v.genres],
             "amenities": v.amenities,
