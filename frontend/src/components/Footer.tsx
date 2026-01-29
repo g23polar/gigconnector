@@ -4,10 +4,11 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="container footerInner">
-        <div className="footerBrand">Gig Connecter
+        {/* <div className="footerBrand">Gig Connecter
           <Link to="/"></Link>
-        </div>
+        </div> */}
         <div className="footerLinks">
+          <Link to="/">Gig Connector</Link>
           <Link to="/about">About</Link>
           <Link to="/contact">Contact Us</Link>
         </div>
