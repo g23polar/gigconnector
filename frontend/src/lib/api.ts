@@ -45,7 +45,7 @@ async function apiFetch<T>(
   return data as T;
 }
 
-export async function register(email: string, password: string, role: "artist" | "venue") {
+export async function register(email: string, password: string, role: "artist" | "venue" | "admin") {
   const resp = await apiFetch<{ access_token: string }>(`/auth/register`, {
     method: "POST",
     auth: false,
@@ -107,7 +107,7 @@ export async function login(email: string, password: string) {
   }
 }
 
-export async function loginWithGoogle(idToken: string, role?: "artist" | "venue") {
+export async function loginWithGoogle(idToken: string, role?: "artist" | "venue" | "admin") {
   const resp = await apiFetch<{ access_token: string }>(`/auth/google`, {
     method: "POST",
     auth: false,

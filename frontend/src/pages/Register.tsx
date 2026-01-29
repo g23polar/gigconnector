@@ -32,6 +32,12 @@ export default function Register() {
         return;
       }
 
+      if (role === "admin") {
+        setErr("Admin accounts cannot be self-registered.");
+        setBusy(false);
+        return;
+      }
+
       await register(email, password, role);
 
       const next = params.get("next");
@@ -52,6 +58,9 @@ export default function Register() {
     setErr(null);
     setGoogleBusy(true);
     try {
+      if (role === "admin") {
+        throw new Error("Admin accounts cannot be self-registered.");
+      }
       await loginWithGoogle(token, role);
       const next = params.get("next");
       if (next) {
