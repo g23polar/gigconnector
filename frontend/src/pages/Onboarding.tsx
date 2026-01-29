@@ -234,7 +234,10 @@ export default function Onboarding() {
             <div className="divider" />
 
             <div className="grid2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
-              <Card>
+
+              {/* TODO: don't know if i want to have these routes here yet */}
+
+              {/* <Card>
                 <div className="cardTitle">Browse</div>
                 <div className="cardMeta" style={{ marginTop: 6, marginBottom: 12 }}>
                   Explore and shortlist options.
@@ -243,15 +246,15 @@ export default function Onboarding() {
                   {role !== "venue" && <Link className="btn" to="/search/venues">Search venues</Link>}
                   {role !== "artist" && <Link className="btn" to="/search/artists">Search artists</Link>}
                 </div>
-              </Card>
+              </Card> */}
 
-              <Card>
+              {/* <Card>
                 <div className="cardTitle">Bookmarks</div>
                 <div className="cardMeta" style={{ marginTop: 6, marginBottom: 12 }}>
                   Your saved shortlist.
                 </div>
                 <Link className="btn btnPrimary" to="/bookmarks">View bookmarks</Link>
-              </Card>
+              </Card> */}
 
               {role && (
                 <Card>
