@@ -287,7 +287,7 @@ export default function Dashboard() {
     return gigs.filter((gig) => gig.status === tab);
   }, [gigs, tab]);
 
-  const title = role === "artist" ? "Artist dashboard" : role === "venue" ? "Venue dashboard" : "Dashboard";
+  const title = role === "artist" ? "Artist Dashboard" : role === "venue" ? "Venue Dashboard" : "Dashboard";
 
   return (
     <div className="container" style={{ maxWidth: 1100 }}>
