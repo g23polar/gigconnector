@@ -166,17 +166,12 @@ export default function Onboarding() {
                       Rate: {artist.min_rate}–{artist.max_rate} • Travel:{" "}
                       {artist.travel_radius_miles} mi
                     </div>
-                    {String(artist.media_links?.spotify ?? "").trim() ? (
+                    {String(artist.media_links?.spotify ?? "").trim() && (
                       <div className="smallMuted">
                         Spotify:{" "}
                         <a href={String(artist.media_links?.spotify)} target="_blank" rel="noreferrer">
                           {String(artist.media_links?.spotify)}
                         </a>
-                      </div>
-                    ) : (
-                      <div className="error">
-                        Spotify link required.{" "}
-                        <Link to="/profile/artist">Add it to your profile.</Link>
                       </div>
                     )}
                   </div>

@@ -271,27 +271,21 @@ export default function ProfileArtist() {
       return;
     }
     const spotifyLink = String(model.media_links?.spotify ?? "").trim();
-    if (!spotifyLink) {
-      setErr("Spotify link is required.");
-      return;
-    }
-    try {
-      const url = new URL(spotifyLink);
-      const host = url.hostname.toLowerCase();
-      if (!host.endsWith("spotify.com")) {
-        setErr("Spotify link must be a spotify.com URL.");
+    if (spotifyLink) {
+      try {
+        const url = new URL(spotifyLink);
+        const host = url.hostname.toLowerCase();
+        if (!host.endsWith("spotify.com")) {
+          setErr("Spotify link must be a spotify.com URL.");
+          return;
+        }
+      } catch {
+        setErr("Spotify link must be a valid URL.");
         return;
       }
-    } catch {
-      setErr("Spotify link must be a valid URL.");
-      return;
     }
     if (!model.city.trim() || !model.state.trim()) {
       setErr("City and state are required.");
-      return;
-    }
-    if (!normalizeSingleMedia(model.media_links?.live_recording)) {
-      setErr("A live performance recording is required.");
       return;
     }
 
@@ -504,7 +498,7 @@ export default function ProfileArtist() {
               <textarea value={model.bio} onChange={(e) => setModel({ ...model, bio: e.target.value })} />
             </Field>
 
-            <Field label="Spotify link" hint="Required">
+            <Field label="Spotify link" hint="Optional">
               <input
                 className="input"
                 value={String(model.media_links?.spotify ?? "")}
@@ -519,7 +513,7 @@ export default function ProfileArtist() {
 
             <Field
               label="Live performance recording"
-              hint="Required: one video recording (15MB total max)."
+              hint="Optional: one video recording (15MB total max)."
             >
               <input
                 className="input"
