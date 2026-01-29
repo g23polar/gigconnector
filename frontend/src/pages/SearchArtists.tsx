@@ -36,6 +36,8 @@ type ArtistResult = {
   genres: string[];
   media_links: Record<string, unknown>;
   distance_miles?: number | null;
+  verified_gig_count: number;
+  verified_avg_attendance: number | null;
 };
 
 function csvToList(v: string) {
@@ -60,6 +62,8 @@ export default function SearchArtists() {
   const [zipCode, setZipCode] = useState(params.get("zip_code") ?? "");
   const [distance, setDistance] = useState(params.get("distance_miles") ?? "25");
   const [maxRate, setMaxRate] = useState(params.get("max_rate") ?? "");
+  const [minVerifiedGigs, setMinVerifiedGigs] = useState(params.get("min_verified_gigs") ?? "");
+  const [sort, setSort] = useState(params.get("sort") ?? "distance");
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const genreDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -74,15 +78,16 @@ export default function SearchArtists() {
     const p = new URLSearchParams();
     genres.forEach((g) => p.append("genres", g));
     if (maxRate) p.set("max_rate", maxRate);
+    if (minVerifiedGigs) p.set("min_verified_gigs", minVerifiedGigs);
 
     // distance filters only if we have zip code
     if (distance && zipCode) {
       p.set("distance_miles", distance);
       p.set("zip_code", zipCode);
-      p.set("sort", "distance");
     }
+    p.set("sort", sort);
     return `/search/artists?${p.toString()}`;
-  }, [genres, zipCode, distance, maxRate]);
+  }, [genres, zipCode, distance, maxRate, minVerifiedGigs, sort]);
 
   const syncUrl = () => {
     const p = new URLSearchParams();
@@ -90,6 +95,8 @@ export default function SearchArtists() {
     if (zipCode) p.set("zip_code", zipCode);
     if (distance) p.set("distance_miles", distance);
     if (maxRate) p.set("max_rate", maxRate);
+    if (minVerifiedGigs) p.set("min_verified_gigs", minVerifiedGigs);
+    if (sort) p.set("sort", sort);
     setParams(p, { replace: true });
   };
 
@@ -223,7 +230,28 @@ export default function SearchArtists() {
             <Field label="Max rate">
               <input className="input" value={maxRate} onChange={(e) => setMaxRate(e.target.value)} />
             </Field>
+            <Field label="Min verified gigs">
+              <input
+                className="input"
+                value={minVerifiedGigs}
+                onChange={(e) => setMinVerifiedGigs(e.target.value)}
+                placeholder="e.g., 3"
+              />
+            </Field>
           </div>
+
+          <Field label="Sort by">
+            <select
+              className="input"
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+            >
+              <option value="distance">Distance</option>
+              <option value="draw">Self-reported draw</option>
+              <option value="rate">Rate (lowest first)</option>
+              <option value="verified_draw">Verified draw (highest first)</option>
+            </select>
+          </Field>
         </div>
 
         {!isAuthed && (
@@ -270,6 +298,19 @@ export default function SearchArtists() {
                   <div className="smallMuted" style={{ marginTop: 10 }}>
                     Rate: {a.min_rate}–{a.max_rate}
                   </div>
+
+                  {a.verified_gig_count > 0 && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                      <span className="verifiedBadge">
+                        {a.verified_gig_count} verified gig{a.verified_gig_count !== 1 ? "s" : ""}
+                      </span>
+                      {a.verified_avg_attendance != null && (
+                        <span className="smallMuted">
+                          Avg attendance: {a.verified_avg_attendance}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                 </div>
 

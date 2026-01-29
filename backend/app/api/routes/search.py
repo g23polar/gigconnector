@@ -1,13 +1,14 @@
 import math
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import or_
+from sqlalchemy import func as sa_func, or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.core.zipcode import lookup_zipcode
 from app.models.artist import ArtistProfile
 from app.models.genre import Genre
+from app.models.gig import Gig, GigStatus
 from app.models.venue import VenueProfile
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -35,13 +36,35 @@ async def search_artists(
     genres: list[str] = Query(default=[]),
     min_draw: int | None = None,
     max_rate: int | None = None,
+    min_verified_gigs: int | None = None,
     distance_miles: int | None = None,
     zip_code: str | None = None,
-    sort: str = "distance",  # distance|draw|rate
+    sort: str = "distance",  # distance|draw|rate|verified_draw
     page: int = 1,
     page_size: int = 20,
 ):
-    q = db.query(ArtistProfile)
+    # Subquery: verified gig stats per artist
+    verified_stats = (
+        db.query(
+            Gig.artist_profile_id.label("artist_id"),
+            sa_func.count(Gig.id).label("verified_gig_count"),
+            sa_func.avg(Gig.attendance).label("verified_avg_attendance"),
+        )
+        .filter(
+            Gig.status == GigStatus.completed,
+            Gig.artist_confirmed == True,   # noqa: E712
+            Gig.venue_confirmed == True,    # noqa: E712
+            Gig.attendance.isnot(None),
+        )
+        .group_by(Gig.artist_profile_id)
+        .subquery("verified_stats")
+    )
+
+    q = db.query(
+        ArtistProfile,
+        verified_stats.c.verified_gig_count,
+        verified_stats.c.verified_avg_attendance,
+    ).outerjoin(verified_stats, ArtistProfile.id == verified_stats.c.artist_id)
 
     if genres:
         q = q.join(ArtistProfile.genres).filter(Genre.name.in_([g.strip().lower() for g in genres]))
@@ -51,6 +74,9 @@ async def search_artists(
 
     if max_rate is not None:
         q = q.filter(or_(ArtistProfile.min_rate == 0, ArtistProfile.min_rate <= max_rate))
+
+    if min_verified_gigs is not None:
+        q = q.filter(verified_stats.c.verified_gig_count >= min_verified_gigs)
 
     # Lookup searcher's coordinates from zip code
     search_coords = None
@@ -66,6 +92,8 @@ async def search_artists(
         q = q.order_by(ArtistProfile.max_draw.desc())
     elif sort == "rate":
         q = q.order_by(ArtistProfile.min_rate.asc())
+    elif sort == "verified_draw":
+        q = q.order_by(verified_stats.c.verified_avg_attendance.desc().nullslast())
 
     # Fetch more than needed to allow for distance filtering
     fetch_limit = page_size * 5 if search_coords else page_size
@@ -73,7 +101,8 @@ async def search_artists(
     candidates = q.offset(offset).limit(fetch_limit).all()
 
     items = []
-    for a in candidates:
+    for row in candidates:
+        a, v_gig_count, v_avg_attendance = row
         dist = None
 
         # Calculate distance if we have search coordinates
@@ -101,6 +130,12 @@ async def search_artists(
             "max_draw": a.max_draw,
             "genres": [g.name for g in a.genres],
             "media_links": a.media_links,
+            "verified_gig_count": v_gig_count or 0,
+            "verified_avg_attendance": (
+                round(float(v_avg_attendance), 1)
+                if v_avg_attendance is not None
+                else None
+            ),
         })
 
     # Sort by distance if requested
