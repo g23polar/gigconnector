@@ -61,9 +61,13 @@ export default function Home() {
             <div className="homeSubHeadline">track events, ticket sales, and earnings.</div>
 
             <div className="homeCTA">
-              <a className="btn btnPrimary" href="#choose">
-                Get started
-              </a>
+
+              {(role === "venue" || role === "artist") && (
+                <Link className="btn btnPrimary" to="/dashboard">
+                  Your metrics
+                </Link>
+              )}
+              
               {role !== "venue" && (
                 <Link className="btn" to="/search/venues">
                   Browse venues
