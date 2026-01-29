@@ -31,6 +31,12 @@ export default function NavBar() {
             {role === "artist" ? "Artist | Gig Connector" : "Venue | Gig Connector"}
           </Link>
         )}
+
+        {(role !== "artist" && role !== "venue") && (
+          <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
+            {"Gig Connector"}
+          </Link>
+        )}
         {role === "admin" && (
           <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
             Admin | Gig Connector
