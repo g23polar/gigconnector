@@ -222,7 +222,7 @@ export default function SearchArtists() {
             />
           </Field>
 
-          <Field label="Distance (miles)">
+          <Field label="Max Distance (miles)">
             <input className="input" value={distance} onChange={(e) => setDistance(e.target.value)} />
           </Field>
 

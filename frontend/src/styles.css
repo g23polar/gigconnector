@@ -109,6 +109,11 @@ a:hover{ opacity: .9; }
   gap: 10px;
 }
 
+.googleAuthButton {
+  display: flex;
+  justify-content: center;
+}
+
 .footer {
   margin-top: 40px;
   border-top: 1px solid var(--border);

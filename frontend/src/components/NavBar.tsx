@@ -38,7 +38,6 @@ export default function NavBar() {
         {isAuthed() && (
           <>
             <Link to="/bookmarks">Bookmarks</Link>
-            <Link to="/gigs">Gigs</Link>
             <div className="navDropdown" ref={dropRef}>
               <button
                 className="navDropdownToggle"
@@ -60,7 +59,7 @@ export default function NavBar() {
         <div className="navRight">
           {isAuthed() ? (
             <>
-              {role === "venue" &&<Link to="/events">Your Events</Link>}
+              <Link to="/gigs">Your Gigs</Link>
               <Link to="/onboarding">My Profile</Link>
               <button className="btn btnGhost" onClick={logout}>
                 Logout

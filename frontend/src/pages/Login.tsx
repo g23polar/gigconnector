@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { login } from "../lib/api";
+import { login, loginWithGoogle } from "../lib/api";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function Login() {
   const nav = useNavigate();
@@ -11,6 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -33,11 +35,34 @@ export default function Login() {
     }
   };
 
+  const onGoogle = async (token: string) => {
+    setErr(null);
+    setGoogleBusy(true);
+    try {
+      await loginWithGoogle(token);
+      const next = params.get("next");
+      if (next) {
+        nav(decodeURIComponent(next));
+        return;
+      }
+      nav("/onboarding");
+    } catch (e: any) {
+      setErr(e.message ?? "Google login failed");
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
   return (
     <div className="container" style={{ maxWidth: 520 }}>
       <div className="panel panelPad">
         <h2 className="h2">Login</h2>
         {err && <div className="error" style={{ marginBottom: 10 }}>{err}</div>}
+
+        <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
+          <GoogleAuthButton onCredential={onGoogle} onError={setErr} text="signin_with" />
+          {googleBusy && <div className="smallMuted">Contacting Google...</div>}
+        </div>
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
           <div className="field">

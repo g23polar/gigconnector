@@ -107,6 +107,24 @@ export async function login(email: string, password: string) {
   }
 }
 
+export async function loginWithGoogle(idToken: string, role?: "artist" | "venue") {
+  const resp = await apiFetch<{ access_token: string }>(`/auth/google`, {
+    method: "POST",
+    auth: false,
+    body: { id_token: idToken, role },
+  });
+  setToken(resp.access_token);
+
+  try {
+    const me = await apiFetch<{ role: "artist" | "venue" }>(`/users/me`);
+    setRole(me.role);
+  } catch {
+    // If /users/me fails, role won't be set - that's ok
+  }
+
+  return resp;
+}
+
 export async function health() {
   return apiFetch<{ ok: boolean }>(`/health`, { auth: false });
 }
