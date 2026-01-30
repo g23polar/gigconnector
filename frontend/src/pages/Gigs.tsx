@@ -1,5 +1,5 @@
-import { type FormEvent, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { getRole } from "../lib/auth";
 import type { Artist, Gig, GigStatus, Venue } from "../lib/types";
@@ -19,6 +19,9 @@ type Tab = "upcoming" | "completed" | "all";
 export default function Gigs() {
   const role = getRole();
   const isAdmin = role === "admin";
+  const location = useLocation();
+  const nav = useNavigate();
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -34,6 +37,31 @@ export default function Gigs() {
   const [createErr, setCreateErr] = useState<string | null>(null);
 
   const [tab, setTab] = useState<Tab>("upcoming");
+
+  useEffect(() => {
+    if (!showCreate) return;
+    dateInputRef.current?.focus();
+  }, [showCreate]);
+
+  useEffect(() => {
+    const state = location.state as { rebook?: { artistId?: string; title?: string } } | null;
+    if (!state?.rebook || role !== "venue") return;
+    setShowCreate(true);
+    setSelectedMatch(state.rebook.artistId ?? "");
+    setTitle(state.rebook.title ?? "");
+    setDate("");
+    setCreateErr(null);
+    nav("/gigs", { replace: true, state: null });
+  }, [location.state, nav, role]);
+
+  const handleRebook = (gig: Gig) => {
+    if (role !== "venue") return;
+    setShowCreate(true);
+    setSelectedMatch(gig.artist_profile_id);
+    setTitle(gig.title);
+    setDate("");
+    setCreateErr(null);
+  };
 
   const load = async () => {
     setBusy(true);
@@ -155,6 +183,9 @@ export default function Gigs() {
           <>
             <div className="divider" />
             <form onSubmit={onSubmit}>
+              <div className="smallMuted" style={{ marginBottom: 10 }}>
+                Prefilled from last gig — update the date and title if needed.
+              </div>
               <div className="grid2" style={{ marginBottom: 10 }}>
                 <div className="field">
                   <label>Match partner</label>
@@ -192,6 +223,7 @@ export default function Gigs() {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
+                    ref={dateInputRef}
                     required
                   />
                 </div>
@@ -250,6 +282,7 @@ export default function Gigs() {
             const partnerName =
               role === "artist" ? g.venue_name : g.artist_name;
             const verified = g.artist_confirmed && g.venue_confirmed;
+            const canRebook = role === "venue" && g.status === "completed" && verified;
             return (
               <Card key={g.id}>
                 <div
@@ -286,9 +319,16 @@ export default function Gigs() {
                       </div>
                     )}
                   </div>
-                  <Link className="btn btnGhost" to={`/gigs/${g.id}`}>
-                    View
-                  </Link>
+                  <div className="btnRow" style={{ flexShrink: 0 }}>
+                    {canRebook && (
+                      <button className="btn btnPrimary" onClick={() => handleRebook(g)}>
+                        Rebook
+                      </button>
+                    )}
+                    <Link className="btn btnGhost" to={`/gigs/${g.id}`}>
+                      View
+                    </Link>
+                  </div>
                 </div>
               </Card>
             );

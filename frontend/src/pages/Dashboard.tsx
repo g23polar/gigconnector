@@ -467,6 +467,7 @@ export default function Dashboard() {
                 const partnerName =
                   role === "artist" ? gig.venue_name : role === "venue" ? gig.artist_name : "Partner";
                 const verified = gig.artist_confirmed && gig.venue_confirmed;
+                const canRebook = role === "venue" && gig.status === "completed" && verified;
                 return (
                   <Card key={gig.id}>
                     <div
@@ -498,9 +499,25 @@ export default function Dashboard() {
                           Tickets: {gig.tickets_sold ?? "--"} &middot; Earnings: {formatCurrency(gig.gross_revenue_cents)}
                         </div>
                       </div>
-                      <Link className="btn btnGhost" to={`/gigs/${gig.id}`}>
-                        View
-                      </Link>
+                      <div className="btnRow" style={{ flexShrink: 0 }}>
+                        {canRebook && (
+                          <Link
+                            className="btn btnPrimary"
+                            to="/gigs"
+                            state={{
+                              rebook: {
+                                artistId: gig.artist_profile_id,
+                                title: gig.title,
+                              },
+                            }}
+                          >
+                            Rebook
+                          </Link>
+                        )}
+                        <Link className="btn btnGhost" to={`/gigs/${gig.id}`}>
+                          View
+                        </Link>
+                      </div>
                     </div>
                   </Card>
                 );
