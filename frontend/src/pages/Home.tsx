@@ -68,6 +68,12 @@ export default function Home() {
                 </Link>
               )}
 
+              {(role === "venue" || role === "artist") && (
+                <Link className="btn" to="/gigs">
+                  Upcoming gigs
+                </Link>
+              )}
+
               {role !== "venue" && (
                 <Link className="btn" to="/search/venues">
                   Browse venues
