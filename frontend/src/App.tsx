@@ -24,6 +24,7 @@ import GigDetail from "./pages/GigDetail";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Leaderboard from "./pages/Leaderboard";
 
 export default function App() {
   return (
@@ -134,6 +135,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route

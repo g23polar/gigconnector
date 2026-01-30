@@ -736,3 +736,101 @@ label{
 @media (max-width: 900px) {
   .dashboardGrid { grid-template-columns: 1fr; }
 }
+
+/* --- Leaderboard --- */
+.lbSortRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.lbList {
+  display: grid;
+  gap: 8px;
+}
+
+.lbCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.02);
+  transition: background .15s ease, border-color .15s ease;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.lbCard:hover {
+  background: var(--hover);
+  border-color: rgba(255,255,255,.12);
+  opacity: 1;
+}
+
+.lbRank {
+  font-weight: 900;
+  font-size: 22px;
+  min-width: 36px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.lbCard:nth-child(1) .lbRank { color: #ffd700; }
+.lbCard:nth-child(2) .lbRank { color: #c0c0c0; }
+.lbCard:nth-child(3) .lbRank { color: #cd7f32; }
+
+.lbInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.lbName {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lbStats {
+  display: flex;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.lbStat {
+  text-align: center;
+  min-width: 56px;
+}
+
+.lbStatValue {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.lbStatLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+@media (max-width: 700px) {
+  .lbCard {
+    flex-wrap: wrap;
+  }
+  .lbStats {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .lbStat {
+    min-width: 44px;
+  }
+}

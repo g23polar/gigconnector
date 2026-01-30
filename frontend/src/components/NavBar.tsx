@@ -45,6 +45,7 @@ export default function NavBar() {
         {/* Artists search for venues, venues search for artists */}
         {(role === "artist" || role === "admin") && <Link to="/search/venues">Find Venues</Link>}
         {(role === "venue" || role === "admin") && <Link to="/search/artists">Find Artists</Link>}
+        <Link to="/leaderboard">Leaderboard</Link>
         {isAuthed() && (
           <>
             <div className="navDropdown" ref={dropRef}>

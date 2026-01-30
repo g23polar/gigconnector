@@ -9,6 +9,7 @@ export default function Footer() {
         </div> */}
         <div className="footerLinks">
           <Link to="/">Gig Connector</Link>
+          <Link to="/leaderboard">Leaderboard</Link>
           <Link to="/about">About</Link>
           <Link to="/contact">Contact Us</Link>
         </div>

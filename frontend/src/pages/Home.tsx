@@ -84,6 +84,10 @@ export default function Home() {
                   Browse artists
                 </Link>
               )}
+
+              <Link className="btn btnPrimary" to="/leaderboard">
+                Leaderboard
+              </Link>
             </div>
           </div>
         </div>
