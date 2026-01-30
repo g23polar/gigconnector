@@ -43,11 +43,6 @@ type SortArtist = "gigs" | "attendance" | "tickets";
 const fmtNum = (v: number | null) =>
   v == null ? "--" : v.toLocaleString("en-US");
 
-const fmtCurrency = (cents: number | null) => {
-  if (cents == null) return "--";
-  const d = cents / 100;
-  return `$${d.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-};
 
 function sortVenues(list: VenueEntry[], by: SortVenue): VenueEntry[] {
   const copy = [...list];
