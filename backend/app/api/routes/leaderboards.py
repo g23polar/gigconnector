@@ -49,7 +49,6 @@ def get_leaderboard(
             func.sum(Gig.attendance).label("total_attendance"),
             func.avg(Gig.attendance).label("avg_attendance"),
             func.sum(Gig.tickets_sold).label("total_tickets_sold"),
-            func.sum(Gig.gross_revenue_cents).label("total_gross_revenue_cents"),
             func.count(func.distinct(Gig.artist_profile_id)).label("unique_artists"),
         )
         .join(Gig, Gig.venue_profile_id == VenueProfile.id)
@@ -80,7 +79,6 @@ def get_leaderboard(
                 total_attendance=row.total_attendance,
                 avg_attendance=round(row.avg_attendance, 1) if row.avg_attendance else None,
                 total_tickets_sold=row.total_tickets_sold,
-                total_gross_revenue_cents=row.total_gross_revenue_cents,
                 unique_artists=row.unique_artists,
             )
         )

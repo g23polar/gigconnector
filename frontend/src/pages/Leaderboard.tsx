@@ -13,7 +13,6 @@ type VenueEntry = {
   total_attendance: number | null;
   avg_attendance: number | null;
   total_tickets_sold: number | null;
-  total_gross_revenue_cents: number | null;
   unique_artists: number;
 };
 
@@ -38,7 +37,7 @@ type LeaderboardData = {
 };
 
 type Tab = "venues" | "artists";
-type SortVenue = "gigs" | "attendance" | "tickets" | "revenue";
+type SortVenue = "gigs" | "attendance" | "tickets";
 type SortArtist = "gigs" | "attendance" | "tickets";
 
 const fmtNum = (v: number | null) =>
@@ -59,10 +58,6 @@ function sortVenues(list: VenueEntry[], by: SortVenue): VenueEntry[] {
       return copy.sort((a, b) => (b.total_attendance ?? 0) - (a.total_attendance ?? 0));
     case "tickets":
       return copy.sort((a, b) => (b.total_tickets_sold ?? 0) - (a.total_tickets_sold ?? 0));
-    case "revenue":
-      return copy.sort(
-        (a, b) => (b.total_gross_revenue_cents ?? 0) - (a.total_gross_revenue_cents ?? 0)
-      );
   }
 }
 
@@ -176,7 +171,6 @@ export default function Leaderboard() {
                 ["gigs", "Most gigs"],
                 ["attendance", "Attendance"],
                 ["tickets", "Tickets sold"],
-                ["revenue", "Revenue"],
               ] as [SortVenue, string][]
             ).map(([key, label]) => (
               <button
@@ -222,10 +216,6 @@ export default function Leaderboard() {
                   <div className="lbStat">
                     <div className="lbStatValue">{fmtNum(v.total_tickets_sold)}</div>
                     <div className="lbStatLabel">Tickets</div>
-                  </div>
-                  <div className="lbStat">
-                    <div className="lbStatValue">{fmtCurrency(v.total_gross_revenue_cents)}</div>
-                    <div className="lbStatLabel">Revenue</div>
                   </div>
                   <div className="lbStat">
                     <div className="lbStatValue">{v.unique_artists}</div>

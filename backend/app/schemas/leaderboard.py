@@ -13,7 +13,6 @@ class VenueLeaderboardEntry(BaseModel):
     total_attendance: Optional[int] = None
     avg_attendance: Optional[float] = None
     total_tickets_sold: Optional[int] = None
-    total_gross_revenue_cents: Optional[int] = None
     unique_artists: int
 
 
