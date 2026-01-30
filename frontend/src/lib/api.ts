@@ -129,4 +129,26 @@ export async function health() {
   return apiFetch<{ ok: boolean }>(`/health`, { auth: false });
 }
 
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.detail ?? `Request failed: ${res.status}`;
+    throw new Error(msg);
+  }
+
+  return data as T;
+}
+
 export { apiFetch };

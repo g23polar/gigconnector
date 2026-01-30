@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../lib/api";
+import { apiFetch, apiUpload } from "../lib/api";
 import { clearToken } from "../lib/auth";
-import type { Venue, VenueEvent } from "../lib/types";
+import type { EventImportResult, Venue, VenueEvent } from "../lib/types";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel } from "../ui/Card";
@@ -67,6 +67,10 @@ export default function ProfileVenue() {
   const [newEvent, setNewEvent] = useState({ title: "", description: "", date: "" });
   const [eventBusy, setEventBusy] = useState(false);
   const [eventErr, setEventErr] = useState<string | null>(null);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importResult, setImportResult] = useState<EventImportResult | null>(null);
+  const [importErr, setImportErr] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -162,6 +166,43 @@ export default function ProfileVenue() {
       await apiFetch(`/events/${encodeURIComponent(eventId)}`, { method: "DELETE" });
       setEvents((prev) => prev.filter((e) => e.id !== eventId));
     } catch {}
+  };
+
+  const onImportCalendar = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      setImportErr("Please select an .ics file.");
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith(".ics")) {
+      setImportErr("Please select a valid .ics (iCalendar) file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setImportErr("File is too large. Maximum size is 2 MB.");
+      return;
+    }
+
+    setImportErr(null);
+    setImportResult(null);
+    setImportBusy(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await apiUpload<EventImportResult>("/events/import", formData);
+      setImportResult(result);
+
+      if (result.imported > 0) {
+        const updated = await apiFetch<VenueEvent[]>("/events/mine");
+        setEvents(updated);
+      }
+    } catch (e: any) {
+      setImportErr(e.message ?? "Failed to import calendar");
+    } finally {
+      setImportBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const onDeleteAccount = async () => {
@@ -335,6 +376,48 @@ export default function ProfileVenue() {
             <div>
               <Button type="button" variant="primary" onClick={onAddEvent} disabled={eventBusy}>
                 {eventBusy ? "Adding..." : "Add event"}
+              </Button>
+            </div>
+          </div>
+
+          <div style={{ padding: "14px 0", borderTop: `1px solid var(--border)` }}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Import from calendar</div>
+            <p className="smallMuted" style={{ marginBottom: 10 }}>
+              Upload an .ics file to import events in bulk. Duplicates (same title and date) will be skipped.
+            </p>
+
+            {importErr && <div className="error" style={{ marginBottom: 12 }}>{importErr}</div>}
+
+            {importResult && (
+              <div className="ok" style={{ marginBottom: 12 }}>
+                Imported {importResult.imported} event{importResult.imported !== 1 ? "s" : ""}.
+                {importResult.skipped > 0 && (
+                  <> Skipped {importResult.skipped} (duplicates or missing data).</>
+                )}
+                {importResult.errors.length > 0 && (
+                  <details style={{ marginTop: 6 }}>
+                    <summary style={{ cursor: "pointer", fontSize: 13 }}>
+                      {importResult.errors.length} warning{importResult.errors.length !== 1 ? "s" : ""}
+                    </summary>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 13 }}>
+                      {importResult.errors.map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+
+            <div className="btnRow">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".ics,text/calendar"
+                style={{ fontSize: 13 }}
+              />
+              <Button type="button" onClick={onImportCalendar} disabled={importBusy}>
+                {importBusy ? "Importing..." : "Import .ics"}
               </Button>
             </div>
           </div>

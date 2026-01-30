@@ -25,3 +25,9 @@ class EventPublicOut(BaseModel):
     venue_name: str
     city: str
     state: str
+
+
+class EventImportResult(BaseModel):
+    imported: int
+    skipped: int
+    errors: list[str] = []

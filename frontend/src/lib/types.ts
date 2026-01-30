@@ -23,6 +23,12 @@ export type VenueEvent = {
   date: string;
 };
 
+export type EventImportResult = {
+  imported: number;
+  skipped: number;
+  errors: string[];
+};
+
 export type VenueEventPublic = {
   id: string;
   title: string;

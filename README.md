@@ -9,6 +9,7 @@ tech stack
 		FastAPI
 		uvicorn
 	hosting
+		emailJS 
 		render frontend
 		render backend
 	database
