@@ -8,7 +8,7 @@ export default function Home() {
   const venueNext = encodeURIComponent("/profile/venue");
   const authed = isAuthed();
   const role = getRole();
-  const words = (role === "artist") ? ["venue?"] : ["musician?"];
+  const words = (role === "artist") ? ["venue?"] : (role === "venue") ? ["musician?"] : ["venue?", "musician?"];
 
   const [targetIndex, setTargetIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState("");
