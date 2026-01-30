@@ -229,6 +229,35 @@ def list_my_events(
     ]
 
 
+@router.get("/{event_id}", response_model=EventPublicOut)
+def get_event(
+    event_id: str,
+    db: Session = Depends(get_db),
+):
+    row = (
+        db.query(Event, VenueProfile)
+        .join(VenueProfile, VenueProfile.id == Event.venue_profile_id)
+        .filter(Event.id == event_id)
+        .first()
+    )
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found",
+        )
+    e, v = row
+    return EventPublicOut(
+        id=e.id,
+        title=e.title,
+        description=e.description,
+        date=e.date,
+        venue_id=v.id,
+        venue_name=v.venue_name,
+        city=v.city,
+        state=v.state,
+    )
+
+
 @router.delete("/{event_id}")
 def delete_event(
     event_id: str,

@@ -12,6 +12,7 @@ import ProfileVenue from "./pages/ProfileVenue";
 import SearchArtists from "./pages/SearchArtists";
 import SearchVenues from "./pages/SearchVenues";
 import VenueEvents from "./pages/VenueEvents";
+import EventDetail from "./pages/EventDetail";
 import Bookmarks from "./pages/Bookmarks";
 import ArtistDetail from "./pages/ArtistDetail";
 import VenueDetail from "./pages/VenueDetail";
@@ -78,6 +79,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/events" element={<VenueEvents />} />
 
             <Route path="/artists/:id" element={<ArtistDetail />} />

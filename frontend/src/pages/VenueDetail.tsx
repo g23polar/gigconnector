@@ -218,7 +218,7 @@ export default function VenueDetail() {
                     {upcomingEvents.map((ev) => (
                       <div className="card" key={ev.id}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                          <div className="cardTitle">{ev.title}</div>
+                          <Link className="cardTitle" to={`/events/${ev.id}`}>{ev.title}</Link>
                           <div className="cardMeta">{ev.date}</div>
                         </div>
                         {ev.description && (

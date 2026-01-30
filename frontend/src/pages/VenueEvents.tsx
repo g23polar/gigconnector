@@ -93,7 +93,7 @@ export default function VenueEvents() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-                      <div className="cardTitle">{ev.title}</div>
+                      <Link className="cardTitle" to={`/events/${ev.id}`}>{ev.title}</Link>
                       {!isVenue && <Link className="smallMuted" to={`/venues/${ev.venue_id}`}>View venue</Link>}
                       {!isVenue && <Tag>Venue</Tag>}
                     </div>
@@ -121,7 +121,7 @@ export default function VenueEvents() {
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-                        <div className="cardTitle">{ev.title}</div>
+                        <Link className="cardTitle" to={`/events/${ev.id}`}>{ev.title}</Link>
                         {!isVenue && <Link className="smallMuted" to={`/venues/${ev.venue_id}`}>View venue</Link>}
                         {!isVenue && <Tag>Venue</Tag>}
                       </div>
