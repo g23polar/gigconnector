@@ -173,9 +173,9 @@ export default function ArtistDetail() {
     <div className="container" style={{ maxWidth: 980 }}>
       <div className="smallMuted" style={{ marginBottom: 10 }}>
         {role === "artist" ? (
-          <Link to="/search/venues">← Back to search</Link>
+          <Link to="/">← Back to home</Link>
         ) : (
-          <Link to="/search/artists">← Back to search</Link>
+          <Link to="/">← Back to home</Link>
         )}
       </div>
 

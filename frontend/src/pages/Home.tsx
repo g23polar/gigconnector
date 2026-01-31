@@ -70,7 +70,7 @@ export default function Home() {
 
               {(role === "venue" || role === "artist") && (
                 <Link className="btn" to="/gigs">
-                  Upcoming gigs
+                  Your gigs
                 </Link>
               )}
 

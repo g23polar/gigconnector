@@ -448,6 +448,9 @@ export default function ProfileVenue() {
 
         <div className="divider" />
 
+
+        <br></br>
+        <br></br>
         <div>
           <div className="sectionTitle">Danger zone</div>
           <p className="sectionDesc">Delete your account and profile permanently.</p>
