@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse
 from jose import JWTError, jwt
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -26,6 +26,11 @@ from app.services.spotify import (
 )
 
 router = APIRouter(prefix="/spotify", tags=["spotify"])
+
+
+class SpotifyCallbackIn(BaseModel):
+    code: str
+    state: str
 
 
 def _get_artist_profile(db: Session, user: User) -> ArtistProfile:
@@ -71,16 +76,15 @@ def spotify_authorize(
     return SpotifyAuthURL(url=url)
 
 
-@router.get("/callback")
+@router.post("/callback")
 def spotify_callback(
-    code: str,
-    state: str,
+    body: SpotifyCallbackIn,
     db: Session = Depends(get_db),
 ):
     # Validate state JWT
     try:
         payload = jwt.decode(
-            state, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALG]
+            body.state, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALG]
         )
         user_id = payload.get("sub")
         purpose = payload.get("purpose")
@@ -108,7 +112,7 @@ def spotify_callback(
 
     # Exchange code for tokens
     try:
-        token_data = exchange_code_for_tokens(code)
+        token_data = exchange_code_for_tokens(body.code)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -160,14 +164,7 @@ def spotify_callback(
         db.add(conn)
 
     db.commit()
-
-    # Redirect to frontend profile page
-    origins = settings.CORS_ORIGINS.split(",")
-    frontend_origin = origins[0].strip() if origins else "http://localhost:5173"
-    return RedirectResponse(
-        url=f"{frontend_origin}/profile/artist?spotify=connected",
-        status_code=302,
-    )
+    return {"ok": True}
 
 
 @router.get("/connection", response_model=SpotifyConnectionOut)
