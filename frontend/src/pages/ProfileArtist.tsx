@@ -8,6 +8,7 @@ import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel } from "../ui/Card";
 import LazyVideo from "../ui/LazyVideo";
+import SpotifyConnectButton from "../components/SpotifyConnectButton";
 
 const POPULAR_GENRES = [
   "Rock",
@@ -161,6 +162,15 @@ export default function ProfileArtist() {
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
+
+  // Detect Spotify OAuth callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("spotify") === "connected") {
+      setOk("Spotify connected successfully!");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -495,7 +505,11 @@ export default function ProfileArtist() {
               <textarea value={model.bio} onChange={(e) => setModel({ ...model, bio: e.target.value })} />
             </Field>
 
-            <Field label="Spotify link" hint="Optional">
+            <Field label="Spotify" hint="Connect your Spotify account for rich stats and embedded player.">
+              <SpotifyConnectButton />
+            </Field>
+
+            <Field label="Spotify link" hint="Or paste a link manually (optional)">
               <input
                 className="input"
                 value={String(model.media_links?.spotify ?? "")}

@@ -105,3 +105,30 @@ export type ArtistStats = {
   unique_venues_count: number;
   gig_history: GigHistoryItem[];
 };
+
+export type SpotifyTopTrack = {
+  name: string;
+  preview_url: string | null;
+  album_name: string | null;
+  album_image: string | null;
+  duration_ms: number | null;
+  track_url: string | null;
+};
+
+export type SpotifyPublicData = {
+  connected: boolean;
+  spotify_artist_id: string | null;
+  followers: number | null;
+  popularity: number | null;
+  genres: string[];
+  images: { url: string; height: number; width: number }[];
+  top_tracks: SpotifyTopTrack[];
+  artist_url: string | null;
+};
+
+export type SpotifyConnection = {
+  connected: boolean;
+  spotify_artist_id: string | null;
+  spotify_data: Record<string, unknown>;
+  data_fetched_at: string | null;
+};

@@ -6,7 +6,9 @@ import Button from "../ui/Button";
 import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
 import LazyVideo from "../ui/LazyVideo";
-import type { Artist, ArtistStats } from "../lib/types";
+import type { Artist, ArtistStats, SpotifyPublicData } from "../lib/types";
+import SpotifyEmbed from "../components/SpotifyEmbed";
+import SpotifyStats from "../components/SpotifyStats";
 
 type MediaItem = {
   name: string;
@@ -56,6 +58,7 @@ export default function ArtistDetail() {
   const [bookmarkId, setBookmarkId] = useState<string | null>(null);
   const [matchStatus, setMatchStatus] = useState<"none" | "pending" | "matched">("none");
   const [stats, setStats] = useState<ArtistStats | null>(null);
+  const [spotifyData, setSpotifyData] = useState<SpotifyPublicData | null>(null);
 
   const role = getRole();
   const isAuthed = !!getToken();
@@ -63,7 +66,11 @@ export default function ArtistDetail() {
   const uploads = item ? extractUploads(item.media_links?.uploads) : [];
   const linkEntries = item
     ? Object.entries(item.media_links ?? {}).filter(
-        ([key]) => key !== "uploads" && key !== "live_recording" && key !== "location_place_id"
+        ([key]) =>
+          key !== "uploads" &&
+          key !== "live_recording" &&
+          key !== "location_place_id" &&
+          !(key === "spotify" && spotifyData?.connected)
       )
     : [];
 
@@ -107,6 +114,13 @@ export default function ArtistDetail() {
     if (!artistId) return;
     apiFetch<ArtistStats>(`/gigs/stats/${encodeURIComponent(artistId)}`, { auth: false })
       .then(setStats)
+      .catch(() => {});
+  }, [artistId]);
+
+  useEffect(() => {
+    if (!artistId) return;
+    apiFetch<SpotifyPublicData>(`/spotify/public/${encodeURIComponent(artistId)}`, { auth: false })
+      .then(setSpotifyData)
       .catch(() => {});
   }, [artistId]);
 
@@ -289,6 +303,19 @@ export default function ArtistDetail() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </>
+            )}
+
+            {spotifyData?.connected && (
+              <>
+                <div className="divider" />
+                <div>
+                  <div className="sectionTitle">Spotify</div>
+                  <SpotifyStats data={spotifyData} />
+                  {spotifyData.spotify_artist_id && (
+                    <SpotifyEmbed spotifyArtistId={spotifyData.spotify_artist_id} />
+                  )}
                 </div>
               </>
             )}

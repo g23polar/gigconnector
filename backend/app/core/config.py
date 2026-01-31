@@ -8,6 +8,9 @@ class Settings(BaseSettings):
 
     JWT_SECRET_KEY: str
     GOOGLE_CLIENT_ID: str | None = None
+    SPOTIFY_CLIENT_ID: str | None = None
+    SPOTIFY_CLIENT_SECRET: str | None = None
+    SPOTIFY_REDIRECT_URI: str | None = None
     JWT_ALG: str = "HS256"
     ACCESS_TOKEN_MINUTES: int = 30
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"

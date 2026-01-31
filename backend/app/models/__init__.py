@@ -7,3 +7,4 @@ from app.models.bookmark import Bookmark  # noqa: F401
 from app.models.event import Event  # noqa: F401
 from app.models.gig import Gig  # noqa: F401
 from app.models.relationship_log import RelationshipLog  # noqa: F401
+from app.models.spotify_connection import SpotifyConnection  # noqa: F401
