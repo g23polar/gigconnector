@@ -47,7 +47,7 @@ export default function NavBar() {
       <div className="container navInner">
         {(role === "artist" || role === "venue") && (
           <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
-            {role === "artist" ? "Artist | Gig Connector" : "Venue | Gig Connector"}
+            {role === "artist" ? "Artist | Gig Connector" : role == "venue" ? "Venue | Gig Connector" : "Gig Connector"}
           </Link>
         )}
 
@@ -61,9 +61,10 @@ export default function NavBar() {
             Admin | Gig Connector
           </Link>
         )}
-        {/* Artists search for venues, venues search for artists */}
-        {(role === "artist" || role === "admin") && <Link to="/search/venues">Find Venues</Link>}
-        {(role === "venue" || role === "admin") && <Link to="/search/artists">Find Artists</Link>}
+
+        <Link to="/search/venues">Find Venues</Link>
+        <Link to="/search/artists">Find Artists</Link>
+        
         <Link to="/leaderboard">Leaderboard</Link>
         {isAuthed() && (
           <>
