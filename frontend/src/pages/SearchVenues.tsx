@@ -59,6 +59,7 @@ export default function SearchVenues() {
   const role = getRole();
 
   // Initialize from URL (shareable / refresh-safe)
+  const [query] = useState(params.get("q") ?? "");
   const [genres, setGenres] = useState<string[]>(() => parseGenresParam(params));
   const [zipCode, setZipCode] = useState(params.get("zip_code") ?? "");
   const [distance, setDistance] = useState(params.get("distance_miles") ?? "25");
@@ -76,6 +77,7 @@ export default function SearchVenues() {
 
   const url = useMemo(() => {
     const p = new URLSearchParams();
+    if (query) p.set("q", query);
     genres.forEach((g) => p.append("genres", g));
 
     if (minCapacity) p.set("min_capacity", minCapacity);
@@ -88,10 +90,11 @@ export default function SearchVenues() {
       p.set("sort", "distance");
     }
     return `/search/venues?${p.toString()}`;
-  }, [genres, zipCode, distance, minCapacity, budgetMax]);
+  }, [query, genres, zipCode, distance, minCapacity, budgetMax]);
 
   const syncUrl = () => {
     const p = new URLSearchParams();
+    if (query) p.set("q", query);
     genres.forEach((g) => p.append("genres", g));
     if (zipCode) p.set("zip_code", zipCode);
     if (distance) p.set("distance_miles", distance);

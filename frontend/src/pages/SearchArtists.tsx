@@ -57,6 +57,7 @@ export default function SearchArtists() {
   const role = getRole();
 
   // Initialize from URL (shareable / refresh-safe)
+  const [query] = useState(params.get("q") ?? "");
   const [genres, setGenres] = useState<string[]>(() => parseGenresParam(params));
   const [zipCode, setZipCode] = useState(params.get("zip_code") ?? "");
   const [distance, setDistance] = useState(params.get("distance_miles") ?? "25");
@@ -75,6 +76,7 @@ export default function SearchArtists() {
 
   const url = useMemo(() => {
     const p = new URLSearchParams();
+    if (query) p.set("q", query);
     genres.forEach((g) => p.append("genres", g));
     if (maxRate) p.set("max_rate", maxRate);
     if (minVerifiedGigs) p.set("min_verified_gigs", minVerifiedGigs);
@@ -86,10 +88,11 @@ export default function SearchArtists() {
     }
     p.set("sort", sort);
     return `/search/artists?${p.toString()}`;
-  }, [genres, zipCode, distance, maxRate, minVerifiedGigs, sort]);
+  }, [query, genres, zipCode, distance, maxRate, minVerifiedGigs, sort]);
 
   const syncUrl = () => {
     const p = new URLSearchParams();
+    if (query) p.set("q", query);
     genres.forEach((g) => p.append("genres", g));
     if (zipCode) p.set("zip_code", zipCode);
     if (distance) p.set("distance_miles", distance);

@@ -110,6 +110,44 @@ a:hover{ opacity: .9; }
   display:flex;
   align-items:center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.navSearch{
+  display:flex;
+  align-items:center;
+  gap: 6px;
+}
+
+.navSearchInput{
+  width: 180px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0f1012;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.navSearchInput::placeholder{
+  color: var(--muted);
+}
+
+.navSearchSelect{
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0f1012;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.navSearchButton{
+  padding: 6px 10px;
+}
+
+@media (max-width: 900px){
+  .navSearchInput{ width: 120px; }
 }
 
 .googleAuthButton {

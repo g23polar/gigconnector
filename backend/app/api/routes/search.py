@@ -15,6 +15,24 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 # Earth radius in miles
 EARTH_RADIUS_MI = 3958.7613
+FUZZY_THRESHOLD = 0.2
+
+
+def _dialect_name(db: Session) -> str:
+    bind = db.get_bind()
+    if bind is None:
+        return "unknown"
+    return bind.dialect.name
+
+
+def _apply_fuzzy_filter(query, term: str | None, columns: list, dialect: str):
+    if not term:
+        return query
+    needle = f"%{term}%"
+    filters = [col.ilike(needle) for col in columns]
+    if dialect == "postgresql":
+        filters.extend(sa_func.similarity(col, term) > FUZZY_THRESHOLD for col in columns)
+    return query.filter(or_(*filters))
 
 
 def haversine_miles(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -33,6 +51,7 @@ def haversine_miles(lat1: float, lng1: float, lat2: float, lng2: float) -> float
 async def search_artists(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
+    q: str | None = None,
     genres: list[str] = Query(default=[]),
     min_draw: int | None = None,
     max_rate: int | None = None,
@@ -60,23 +79,33 @@ async def search_artists(
         .subquery("verified_stats")
     )
 
-    q = db.query(
+    dialect = _dialect_name(db)
+    db_query = db.query(
         ArtistProfile,
         verified_stats.c.verified_gig_count,
         verified_stats.c.verified_avg_attendance,
     ).outerjoin(verified_stats, ArtistProfile.id == verified_stats.c.artist_id)
 
+    db_query = _apply_fuzzy_filter(
+        db_query,
+        q,
+        [ArtistProfile.name, ArtistProfile.city, ArtistProfile.state],
+        dialect,
+    )
+
     if genres:
-        q = q.join(ArtistProfile.genres).filter(Genre.name.in_([g.strip().lower() for g in genres]))
+        db_query = db_query.join(ArtistProfile.genres).filter(
+            Genre.name.in_([g.strip().lower() for g in genres])
+        )
 
     if min_draw is not None:
-        q = q.filter(ArtistProfile.max_draw >= min_draw)
+        db_query = db_query.filter(ArtistProfile.max_draw >= min_draw)
 
     if max_rate is not None:
-        q = q.filter(or_(ArtistProfile.min_rate == 0, ArtistProfile.min_rate <= max_rate))
+        db_query = db_query.filter(or_(ArtistProfile.min_rate == 0, ArtistProfile.min_rate <= max_rate))
 
     if min_verified_gigs is not None:
-        q = q.filter(verified_stats.c.verified_gig_count >= min_verified_gigs)
+        db_query = db_query.filter(verified_stats.c.verified_gig_count >= min_verified_gigs)
 
     # Lookup searcher's coordinates from zip code
     search_coords = None
@@ -84,21 +113,21 @@ async def search_artists(
         search_coords = await lookup_zipcode(zip_code)
         if search_coords:
             # Only include artists with zip codes when filtering by distance
-            q = q.filter(ArtistProfile.zip_code.isnot(None))
+            db_query = db_query.filter(ArtistProfile.zip_code.isnot(None))
 
     # For distance filtering, we need to fetch candidates and filter in Python
     # since artist coordinates come from their zip_code lookup
     if sort == "draw":
-        q = q.order_by(ArtistProfile.max_draw.desc())
+        db_query = db_query.order_by(ArtistProfile.max_draw.desc())
     elif sort == "rate":
-        q = q.order_by(ArtistProfile.min_rate.asc())
+        db_query = db_query.order_by(ArtistProfile.min_rate.asc())
     elif sort == "verified_draw":
-        q = q.order_by(verified_stats.c.verified_avg_attendance.desc().nullslast())
+        db_query = db_query.order_by(verified_stats.c.verified_avg_attendance.desc().nullslast())
 
     # Fetch more than needed to allow for distance filtering
     fetch_limit = page_size * 5 if search_coords else page_size
     offset = (page - 1) * page_size if not search_coords else 0
-    candidates = q.offset(offset).limit(fetch_limit).all()
+    candidates = db_query.offset(offset).limit(fetch_limit).all()
 
     items = []
     for row in candidates:
@@ -153,6 +182,7 @@ async def search_artists(
 async def search_venues(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
+    q: str | None = None,
     genres: list[str] = Query(default=[]),
     min_capacity: int | None = None,
     budget_max: int | None = None,
@@ -162,32 +192,42 @@ async def search_venues(
     page: int = 1,
     page_size: int = 20,
 ):
-    q = db.query(VenueProfile)
+    dialect = _dialect_name(db)
+    db_query = db.query(VenueProfile)
+
+    db_query = _apply_fuzzy_filter(
+        db_query,
+        q,
+        [VenueProfile.venue_name, VenueProfile.city, VenueProfile.state],
+        dialect,
+    )
 
     if genres:
-        q = q.join(VenueProfile.genres).filter(Genre.name.in_([g.strip().lower() for g in genres]))
+        db_query = db_query.join(VenueProfile.genres).filter(
+            Genre.name.in_([g.strip().lower() for g in genres])
+        )
 
     if min_capacity is not None:
-        q = q.filter(VenueProfile.capacity >= min_capacity)
+        db_query = db_query.filter(VenueProfile.capacity >= min_capacity)
 
     if budget_max is not None:
-        q = q.filter(VenueProfile.max_budget >= budget_max)
+        db_query = db_query.filter(VenueProfile.max_budget >= budget_max)
 
     # Lookup searcher's coordinates from zip code
     search_coords = None
     if distance_miles is not None and zip_code:
         search_coords = await lookup_zipcode(zip_code)
         if search_coords:
-            q = q.filter(VenueProfile.zip_code.isnot(None))
+            db_query = db_query.filter(VenueProfile.zip_code.isnot(None))
 
     if sort == "capacity":
-        q = q.order_by(VenueProfile.capacity.desc())
+        db_query = db_query.order_by(VenueProfile.capacity.desc())
     elif sort == "budget":
-        q = q.order_by(VenueProfile.max_budget.desc())
+        db_query = db_query.order_by(VenueProfile.max_budget.desc())
 
     fetch_limit = page_size * 5 if search_coords else page_size
     offset = (page - 1) * page_size if not search_coords else 0
-    candidates = q.offset(offset).limit(fetch_limit).all()
+    candidates = db_query.offset(offset).limit(fetch_limit).all()
 
     items = []
     for v in candidates:
