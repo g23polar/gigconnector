@@ -90,6 +90,8 @@ def fetch_and_cache_spotify_data(db: Session, conn: SpotifyConnection) -> dict:
     me = _spotify_get(access_token, "/me")
     data["display_name"] = me.get("display_name")
     data["spotify_url"] = me.get("external_urls", {}).get("spotify")
+    if conn.spotify_data and "monthly_listeners" in conn.spotify_data:
+        data["monthly_listeners"] = conn.spotify_data.get("monthly_listeners")
 
     if conn.spotify_artist_id:
         artist = _spotify_get(access_token, f"/artists/{conn.spotify_artist_id}")
@@ -121,9 +123,38 @@ def fetch_and_cache_spotify_data(db: Session, conn: SpotifyConnection) -> dict:
                 }
             )
         data["top_tracks"] = tracks
+
+        albums_resp = _spotify_get(
+            access_token,
+            f"/artists/{conn.spotify_artist_id}/albums?include_groups=album,single&market=US&limit=10",
+        )
+        seen_albums: set[str] = set()
+        releases = []
+        for album in albums_resp.get("items", []):
+            album_id = album.get("id")
+            if not album_id or album_id in seen_albums:
+                continue
+            seen_albums.add(album_id)
+            releases.append(
+                {
+                    "name": album.get("name"),
+                    "release_date": album.get("release_date"),
+                    "release_date_precision": album.get("release_date_precision"),
+                    "album_type": album.get("album_type"),
+                    "image": (
+                        album.get("images", [{}])[0].get("url")
+                        if album.get("images")
+                        else None
+                    ),
+                    "url": album.get("external_urls", {}).get("spotify"),
+                }
+            )
+        data["recent_releases"] = releases[:8]
     else:
+        data["monthly_listeners"] = data.get("monthly_listeners")
         data["followers"] = None
         data["top_tracks"] = []
+        data["recent_releases"] = []
 
     conn.spotify_data = data
     conn.data_fetched_at = datetime.now(timezone.utc)

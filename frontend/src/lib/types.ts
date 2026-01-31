@@ -115,14 +115,25 @@ export type SpotifyTopTrack = {
   track_url: string | null;
 };
 
+export type SpotifyRelease = {
+  name: string;
+  release_date: string | null;
+  release_date_precision: string | null;
+  album_type: string | null;
+  image: string | null;
+  url: string | null;
+};
+
 export type SpotifyPublicData = {
   connected: boolean;
   spotify_artist_id: string | null;
+  monthly_listeners: number | null;
   followers: number | null;
   popularity: number | null;
   genres: string[];
   images: { url: string; height: number; width: number }[];
   top_tracks: SpotifyTopTrack[];
+  recent_releases: SpotifyRelease[];
   artist_url: string | null;
 };
 

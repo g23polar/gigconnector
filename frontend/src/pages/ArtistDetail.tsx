@@ -187,7 +187,10 @@ export default function ArtistDetail() {
           <div style={{ display: "grid", gap: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
               <div style={{ minWidth: 0 }}>
-                <div className="sectionTitle" style={{ marginBottom: 4 }}>{item.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <div className="sectionTitle" style={{ marginBottom: 4 }}>{item.name}</div>
+                  {spotifyData?.connected && <span className="verifiedBadge">Spotify Verified</span>}
+                </div>
                 <div className="smallMuted">
                   {item.city}, {item.state}
                 </div>

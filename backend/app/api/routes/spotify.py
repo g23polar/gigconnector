@@ -274,14 +274,27 @@ def get_artist_spotify_public(
         }
         for t in data.get("top_tracks", [])
     ]
+    recent_releases = [
+        {
+            "name": r.get("name", ""),
+            "release_date": r.get("release_date"),
+            "release_date_precision": r.get("release_date_precision"),
+            "album_type": r.get("album_type"),
+            "image": r.get("image"),
+            "url": r.get("url"),
+        }
+        for r in data.get("recent_releases", [])
+    ]
 
     return SpotifyPublicData(
         connected=True,
         spotify_artist_id=conn.spotify_artist_id,
+        monthly_listeners=data.get("monthly_listeners"),
         followers=data.get("followers"),
         popularity=data.get("popularity"),
         genres=data.get("genres", []),
         images=data.get("images", []),
         top_tracks=top_tracks,
+        recent_releases=recent_releases,
         artist_url=data.get("artist_url"),
     )
