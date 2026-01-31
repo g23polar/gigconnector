@@ -33,7 +33,7 @@ export default function SpotifyCallback() {
       <div className="container" style={{ maxWidth: 600, textAlign: "center", marginTop: 80 }}>
         <div className="error">{err}</div>
         <div style={{ marginTop: 16 }}>
-          <a href="/profile/artist">Back to profile</a>
+          <a onClick={() => nav(-1)} style={{ cursor: "pointer" }}>Back to profile</a>
         </div>
       </div>
     );

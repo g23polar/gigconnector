@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { getRole, getToken } from "../lib/auth";
 import Button from "../ui/Button";
@@ -172,11 +172,7 @@ export default function ArtistDetail() {
   return (
     <div className="container" style={{ maxWidth: 980 }}>
       <div className="smallMuted" style={{ marginBottom: 10 }}>
-        {role === "artist" ? (
-          <Link to="/">← Back to home</Link>
-        ) : (
-          <Link to="/">← Back to home</Link>
-        )}
+        <a onClick={() => nav(-1)} style={{ cursor: "pointer" }}>← Back</a>
       </div>
 
       <Panel>

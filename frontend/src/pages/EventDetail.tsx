@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { Panel } from "../ui/Card";
 import type { VenueEventPublic } from "../lib/types";
 
 export default function EventDetail() {
   const { id } = useParams();
+  const nav = useNavigate();
   const eventId = id ?? "";
 
   const [event, setEvent] = useState<VenueEventPublic | null>(null);
@@ -36,7 +37,7 @@ export default function EventDetail() {
   return (
     <div className="container" style={{ maxWidth: 980 }}>
       <div className="smallMuted" style={{ marginBottom: 10 }}>
-        <Link to="/events">← Back to events</Link>
+        <a onClick={() => nav(-1)} style={{ cursor: "pointer" }}>← Back to events</a>
       </div>
 
       <Panel>

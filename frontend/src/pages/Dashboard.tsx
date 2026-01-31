@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { getRole } from "../lib/auth";
 import type { Gig, GigStatus } from "../lib/types";
@@ -198,6 +198,7 @@ function ChartCard({
 }
 
 export default function Dashboard() {
+  const nav = useNavigate();
   const role = getRole();
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [busy, setBusy] = useState(true);
@@ -308,9 +309,9 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="btnRow" style={{ flexShrink: 0 }}>
-            <Link className="btn btnGhost" to="/onboarding">
+            <button type="button" className="btn btnGhost" onClick={() => nav(-1)}>
               Back to profile
-            </Link>
+            </button>
             <Link className="btn btnPrimary" to="/gigs">
               Manage gigs
             </Link>

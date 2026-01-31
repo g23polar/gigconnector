@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import type { Gig, GigStatus } from "../lib/types";
 import { Panel } from "../ui/Card";
@@ -11,6 +11,7 @@ function centsToDisplay(cents: number | null): string {
 
 export default function GigDetail() {
   const { id } = useParams<{ id: string }>();
+  const nav = useNavigate();
   const [gig, setGig] = useState<Gig | null>(null);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -138,13 +139,13 @@ export default function GigDetail() {
 
   return (
     <div className="container" style={{ maxWidth: 980 }}>
-      <Link
-        to="/gigs"
+      <a
+        onClick={() => nav(-1)}
         className="smallMuted"
-        style={{ display: "inline-block", marginBottom: 12 }}
+        style={{ display: "inline-block", marginBottom: 12, cursor: "pointer" }}
       >
         &larr; Back to gigs
-      </Link>
+      </a>
 
       <Panel>
         {/* Header */}
