@@ -121,10 +121,6 @@ export default function SearchVenues() {
   };
 
   useEffect(() => {
-    if (role === "venue") {
-      nav("/search/artists");
-      return;
-    }
     // Auto-run once on load with URL params
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps

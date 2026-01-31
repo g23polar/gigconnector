@@ -56,15 +56,11 @@ export default function NavBar() {
             {"Gig Connector"}
           </Link>
         )}
-        {role === "admin" && (
-          <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
-            Admin | Gig Connector
-          </Link>
-        )}
+
 
         <Link to="/search/venues">Find Venues</Link>
         <Link to="/search/artists">Find Artists</Link>
-        
+
         <Link to="/leaderboard">Leaderboard</Link>
         {isAuthed() && (
           <>
