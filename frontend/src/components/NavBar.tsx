@@ -58,8 +58,6 @@ export default function NavBar() {
         )}
 
 
-        <Link to="/search/venues">Find Venues</Link>
-        <Link to="/search/artists">Find Artists</Link>
 
         <Link to="/leaderboard">Leaderboard</Link>
         {isAuthed() && (
@@ -81,6 +79,10 @@ export default function NavBar() {
             </div>
           </>
         )}
+
+        <Link to="/search/venues">Find Venues</Link>
+        <Link to="/search/artists">Find Artists</Link>
+
 
         <div className="navRight">
           <form className="navSearch" onSubmit={submitSearch}>
