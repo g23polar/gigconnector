@@ -44,7 +44,7 @@ export default function NavBar() {
 
   return (
     <div className="nav">
-      <div className="container navInner">
+      <div className="navInner">
         {(role === "artist" || role === "venue") && (
           <Link to="/" style={{ color: "var(--text)", fontWeight: 800 }}>
             {role === "artist" ? "Artist | Gig Connector" : role == "venue" ? "Venue | Gig Connector" : "Gig Connector"}
