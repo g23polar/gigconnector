@@ -17,5 +17,7 @@ npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-./.claude
-./.claude/
+.claude
+CLAUDE.md
+
+.gitignore

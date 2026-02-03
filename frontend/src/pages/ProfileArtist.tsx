@@ -3,12 +3,14 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { clearToken } from "../lib/auth";
-import type { Artist } from "../lib/types";
+import type { Artist, SpotifyPublicData } from "../lib/types";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Panel } from "../ui/Card";
 import LazyVideo from "../ui/LazyVideo";
 import SpotifyConnectButton from "../components/SpotifyConnectButton";
+import SpotifyStats from "../components/SpotifyStats";
+import SpotifyEmbed from "../components/SpotifyEmbed";
 
 const POPULAR_GENRES = [
   "Rock",
@@ -162,6 +164,20 @@ export default function ProfileArtist() {
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [artistProfileId, setArtistProfileId] = useState<string | null>(null);
+  const [spotifyData, setSpotifyData] = useState<SpotifyPublicData | null>(null);
+
+  const fetchSpotifyData = (profileId: string) => {
+    apiFetch<SpotifyPublicData>(`/spotify/public/${encodeURIComponent(profileId)}`)
+      .then(setSpotifyData)
+      .catch(() => setSpotifyData(null));
+  };
+
+  // Fetch Spotify data once we have the artist profile ID
+  useEffect(() => {
+    if (!artistProfileId) return;
+    fetchSpotifyData(artistProfileId);
+  }, [artistProfileId]);
 
   // Detect Spotify OAuth callback redirect
   useEffect(() => {
@@ -169,8 +185,9 @@ export default function ProfileArtist() {
     if (params.get("spotify") === "connected") {
       setOk("Spotify connected successfully!");
       window.history.replaceState({}, "", window.location.pathname);
+      if (artistProfileId) fetchSpotifyData(artistProfileId);
     }
-  }, []);
+  }, [artistProfileId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -186,6 +203,7 @@ export default function ProfileArtist() {
   useEffect(() => {
     apiFetch<Artist>(`/artist-profile/me?include_media=false`)
       .then((a) => {
+        setArtistProfileId(a.id);
         setModel((m) => ({
           ...m,
           name: a.name,
@@ -508,6 +526,15 @@ export default function ProfileArtist() {
             <Field label="Spotify" hint="Connect your Spotify account for rich stats and embedded player.">
               <SpotifyConnectButton />
             </Field>
+
+            {spotifyData?.connected && (
+              <div style={{ marginBottom: 14 }}>
+                <SpotifyStats data={spotifyData} />
+                {spotifyData.spotify_artist_id && (
+                  <SpotifyEmbed spotifyArtistId={spotifyData.spotify_artist_id} />
+                )}
+              </div>
+            )}
 
             <Field label="Spotify link" hint="Or paste a link manually (optional)">
               <input
