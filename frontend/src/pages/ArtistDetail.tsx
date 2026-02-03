@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getRole, getToken } from "../lib/auth";
+import { getRole, isAuthed as checkAuthed } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
@@ -61,7 +61,7 @@ export default function ArtistDetail() {
   const [spotifyData, setSpotifyData] = useState<SpotifyPublicData | null>(null);
 
   const role = getRole();
-  const isAuthed = !!getToken();
+  const isAuthed = checkAuthed();
   const liveRecording = item ? extractSingleMedia(item.media_links?.live_recording) : null;
   const uploads = item ? extractUploads(item.media_links?.uploads) : [];
   const linkEntries = item
@@ -80,7 +80,7 @@ export default function ArtistDetail() {
     if (!artistId) return;
     setErr(null);
     setBusy(true);
-    apiFetch<Artist>(endpoint, { auth: false })
+    apiFetch<Artist>(endpoint)
       .then(setItem)
       .catch((e: any) => setErr(e.message ?? "Failed to load artist"))
       .finally(() => setBusy(false));
@@ -112,14 +112,14 @@ export default function ArtistDetail() {
 
   useEffect(() => {
     if (!artistId) return;
-    apiFetch<ArtistStats>(`/gigs/stats/${encodeURIComponent(artistId)}`, { auth: false })
+    apiFetch<ArtistStats>(`/gigs/stats/${encodeURIComponent(artistId)}`)
       .then(setStats)
       .catch(() => {});
   }, [artistId]);
 
   useEffect(() => {
     if (!artistId) return;
-    apiFetch<SpotifyPublicData>(`/spotify/public/${encodeURIComponent(artistId)}`, { auth: false })
+    apiFetch<SpotifyPublicData>(`/spotify/public/${encodeURIComponent(artistId)}`)
       .then(setSpotifyData)
       .catch(() => {});
   }, [artistId]);

@@ -29,7 +29,7 @@ export default function VenueEvents() {
     setBusy(true);
 
     if (isVenue) {
-      apiFetch<VenueEvent[]>("/events/mine", { auth: true })
+      apiFetch<VenueEvent[]>("/events/mine")
         .then((data) =>
           setEvents(
             data.map((e) => ({
@@ -45,7 +45,7 @@ export default function VenueEvents() {
         .finally(() => setBusy(false));
     } else {
       const suffix = showPast ? "?include_past=true" : "";
-      apiFetch<VenueEventPublic[]>(`/events${suffix}`, { auth: false })
+      apiFetch<VenueEventPublic[]>(`/events${suffix}`)
         .then(setEvents)
         .catch((e: any) => setErr(e.message ?? "Failed to load events"))
         .finally(() => setBusy(false));

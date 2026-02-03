@@ -79,7 +79,7 @@ export default function Leaderboard() {
   const [artistSort, setArtistSort] = useState<SortArtist>("gigs");
 
   useEffect(() => {
-    apiFetch<string[]>("/leaderboards/cities", { auth: false }).then(setCities).catch(() => {});
+    apiFetch<string[]>("/leaderboards/cities").then(setCities).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -88,9 +88,7 @@ export default function Leaderboard() {
       setErr(null);
       try {
         const params = city ? `?city=${encodeURIComponent(city)}` : "";
-        const d = await apiFetch<LeaderboardData>(`/leaderboards${params}`, {
-          auth: false,
-        });
+        const d = await apiFetch<LeaderboardData>(`/leaderboards${params}`);
         setData(d);
       } catch (e: any) {
         setErr(e.message ?? "Failed to load leaderboard");

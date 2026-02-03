@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     SPOTIFY_REDIRECT_URI: str | None = None
     JWT_ALG: str = "HS256"
     ACCESS_TOKEN_MINUTES: int = 30
+    ENVIRONMENT: str = "development"
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    SPOTIFY_TOKEN_ENCRYPTION_KEY: str | None = None
 
 
 settings = Settings()

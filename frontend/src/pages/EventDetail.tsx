@@ -17,9 +17,7 @@ export default function EventDetail() {
     if (!eventId) return;
     setErr(null);
     setBusy(true);
-    apiFetch<VenueEventPublic>(`/events/${encodeURIComponent(eventId)}`, {
-      auth: false,
-    })
+    apiFetch<VenueEventPublic>(`/events/${encodeURIComponent(eventId)}`)
       .then(setEvent)
       .catch((e: any) => setErr(e.message ?? "Failed to load event"))
       .finally(() => setBusy(false));

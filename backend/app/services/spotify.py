@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.spotify_connection import SpotifyConnection
 from app.core.config import settings
+from app.core.encryption import decrypt_token, encrypt_token
 
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -61,15 +62,15 @@ def refresh_access_token(refresh_token: str) -> dict[str, Any]:
 def _ensure_valid_token(db: Session, conn: SpotifyConnection) -> str:
     now = datetime.now(timezone.utc)
     if conn.token_expires_at > now + timedelta(minutes=1):
-        return conn.access_token
+        return decrypt_token(conn.access_token)
 
-    token_data = refresh_access_token(conn.refresh_token)
-    conn.access_token = token_data["access_token"]
+    token_data = refresh_access_token(decrypt_token(conn.refresh_token))
+    conn.access_token = encrypt_token(token_data["access_token"])
     conn.token_expires_at = now + timedelta(seconds=token_data["expires_in"])
     if "refresh_token" in token_data:
-        conn.refresh_token = token_data["refresh_token"]
+        conn.refresh_token = encrypt_token(token_data["refresh_token"])
     db.commit()
-    return conn.access_token
+    return token_data["access_token"]
 
 
 def _spotify_get(access_token: str, path: str) -> dict:

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getRole, getToken } from "../lib/auth";
+import { getRole, isAuthed as checkAuthed } from "../lib/auth";
 import { useToast } from "../lib/useToast";
 import Button from "../ui/Button";
 import { Field } from "../ui/Field";
@@ -73,7 +73,7 @@ export default function SearchVenues() {
   const [busy, setBusy] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const isAuthed = !!getToken();
+  const isAuthed = checkAuthed();
 
   const url = useMemo(() => {
     const p = new URLSearchParams();

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getRole, getToken } from "../lib/auth";
+import { getRole, isAuthed as checkAuthed } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel } from "../ui/Card";
 import Tag from "../ui/Tag";
@@ -21,7 +21,7 @@ export default function VenueDetail() {
   const [matchStatus, setMatchStatus] = useState<"none" | "pending" | "matched">("none");
 
   const role = getRole();
-  const isAuthed = !!getToken();
+  const isAuthed = checkAuthed();
 
   const endpoint = useMemo(() => `/venue-profile/${encodeURIComponent(venueId)}`, [venueId]);
   const upcomingEvents = useMemo(() => {
@@ -35,7 +35,7 @@ export default function VenueDetail() {
     if (!venueId) return;
     setErr(null);
     setBusy(true);
-    apiFetch<Venue>(endpoint, { auth: false })
+    apiFetch<Venue>(endpoint)
       .then(setItem)
       .catch((e: any) => setErr(e.message ?? "Failed to load venue"))
       .finally(() => setBusy(false));

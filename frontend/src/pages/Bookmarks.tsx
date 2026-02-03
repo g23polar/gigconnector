@@ -60,14 +60,14 @@ export default function Bookmarks() {
         data.map(async (b) => {
           try {
             if (b.to_entity_type === "artist") {
-              const artist = await apiFetch<ArtistResult>(`/artist-profile/${encodeURIComponent(b.to_entity_id)}`, {
-                auth: false,
-              });
+              const artist = await apiFetch<ArtistResult>(
+                `/artist-profile/${encodeURIComponent(b.to_entity_id)}`
+              );
               return { kind: "artist", bookmarkId: b.id, entityId: b.to_entity_id, artist };
             } else {
-              const venue = await apiFetch<VenueResult>(`/venue-profile/${encodeURIComponent(b.to_entity_id)}`, {
-                auth: false,
-              });
+              const venue = await apiFetch<VenueResult>(
+                `/venue-profile/${encodeURIComponent(b.to_entity_id)}`
+              );
               return { kind: "venue", bookmarkId: b.id, entityId: b.to_entity_id, venue };
             }
           } catch {

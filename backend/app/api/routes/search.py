@@ -1,10 +1,11 @@
 import math
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func as sa_func, or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core.rate_limit import limiter
 from app.core.zipcode import lookup_zipcode
 from app.models.artist import ArtistProfile
 from app.models.genre import Genre
@@ -48,7 +49,9 @@ def haversine_miles(lat1: float, lng1: float, lat2: float, lng2: float) -> float
 
 
 @router.get("/artists")
+@limiter.limit("30/minute")
 async def search_artists(
+    request: Request,
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
     q: str | None = None,
@@ -59,8 +62,8 @@ async def search_artists(
     distance_miles: int | None = None,
     zip_code: str | None = None,
     sort: str = "distance",  # distance|draw|rate|verified_draw
-    page: int = 1,
-    page_size: int = 20,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
 ):
     # Subquery: verified gig stats per artist
     verified_stats = (
@@ -179,7 +182,9 @@ async def search_artists(
 
 
 @router.get("/venues")
+@limiter.limit("30/minute")
 async def search_venues(
+    request: Request,
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
     q: str | None = None,
@@ -189,8 +194,8 @@ async def search_venues(
     distance_miles: int | None = None,
     zip_code: str | None = None,
     sort: str = "distance",  # distance|capacity|budget
-    page: int = 1,
-    page_size: int = 20,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
 ):
     dialect = _dialect_name(db)
     db_query = db.query(VenueProfile)

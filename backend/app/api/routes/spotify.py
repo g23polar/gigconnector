@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
+from app.core.encryption import encrypt_token
 from app.models.artist import ArtistProfile
 from app.models.spotify_connection import SpotifyConnection
 from app.models.user import User, UserRole
@@ -149,16 +150,16 @@ def spotify_callback(
     )
     if conn:
         conn.spotify_user_id = spotify_user_id
-        conn.access_token = access_token
-        conn.refresh_token = refresh_token
+        conn.access_token = encrypt_token(access_token)
+        conn.refresh_token = encrypt_token(refresh_token)
         conn.token_expires_at = token_expires_at
     else:
         conn = SpotifyConnection(
             id=str(uuid.uuid4()),
             artist_profile_id=prof.id,
             spotify_user_id=spotify_user_id,
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token=encrypt_token(access_token),
+            refresh_token=encrypt_token(refresh_token),
             token_expires_at=token_expires_at,
         )
         db.add(conn)

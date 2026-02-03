@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL, apiFetch } from "../lib/api";
-import { clearToken, getToken } from "../lib/auth";
+import { clearToken, isAuthed } from "../lib/auth";
 import Button from "../ui/Button";
 import { Panel, Card } from "../ui/Card";
 import Tag from "../ui/Tag";
@@ -32,11 +32,10 @@ export default function Onboarding() {
     setDownloadErr(null);
     setDownloadBusy(true);
     try {
-      const token = getToken();
-      if (!token) throw new Error("Not authenticated.");
+      if (!isAuthed()) throw new Error("Not authenticated.");
 
       const res = await fetch(`${API_URL}/relationship-logs/export`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
       if (!res.ok) {
         throw new Error(`Failed to download logs (${res.status}).`);

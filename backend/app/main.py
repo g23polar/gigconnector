@@ -1,5 +1,8 @@
 from fastapi import FastAPI
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
+from app.core.rate_limit import limiter
 from app.api.routes.auth import router as auth_router
 from app.api.routes.artists import router as artists_router
 from app.api.routes.venues import router as venues_router
@@ -16,6 +19,8 @@ from app.core.config import settings
 from app.api.routes.users import router as users_router
 
 app = FastAPI(title="Band x Venue Matching API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(auth_router)
 app.include_router(artists_router)

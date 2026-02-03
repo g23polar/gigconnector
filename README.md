@@ -1,4 +1,7 @@
-https://gigconnecter-frontend.onrender.com
+Community-driven platform to connect local musicians and venues. View artist profiles, track draw and gig metrics.
+
+
+Live on: https://gigconnecter-frontend.onrender.com
 
 tech stack
 

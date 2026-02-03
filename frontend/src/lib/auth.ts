@@ -1,13 +1,11 @@
-const TOKEN_KEY = "gc_token";
 const ROLE_KEY = "gc_role";
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
+const _rawApiUrl = import.meta.env.VITE_API_URL;
+const _apiUrl = _rawApiUrl
+  ? /^(https?:)?\/\//.test(_rawApiUrl)
+    ? _rawApiUrl
+    : `https://${_rawApiUrl}`
+  : "http://localhost:8000";
 
 export function getRole(): "artist" | "venue" | "admin" | null {
   const role = localStorage.getItem(ROLE_KEY);
@@ -19,11 +17,21 @@ export function setRole(role: "artist" | "venue" | "admin") {
   localStorage.setItem(ROLE_KEY, role);
 }
 
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
+export function clearAuth() {
   localStorage.removeItem(ROLE_KEY);
+  // keepalive ensures the request completes even during page navigation
+  fetch(`${_apiUrl}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+    keepalive: true,
+  }).catch(() => {});
 }
 
 export function isAuthed(): boolean {
-  return !!getToken();
+  return !!getRole();
+}
+
+/** @deprecated Use clearAuth() instead */
+export function clearToken() {
+  clearAuth();
 }

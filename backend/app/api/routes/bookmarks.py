@@ -1,15 +1,18 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core.rate_limit import limiter
 from app.models.bookmark import Bookmark, EntityType
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 
 
 @router.post("")
+@limiter.limit("30/minute")
 def create_bookmark(
+    request: Request,
     to_entity_type: EntityType,
     to_entity_id: str,
     db: Session = Depends(get_db),

@@ -1,11 +1,12 @@
 import uuid
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User, UserRole
 from app.schemas.auth import RegisterIn, TokenOut
@@ -15,8 +16,22 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 from app.schemas.auth_login import LoginIn
 from app.schemas.auth_google import GoogleAuthIn
 
+
+def _set_auth_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key="gc_token",
+        value=token,
+        httponly=True,
+        secure=settings.ENVIRONMENT != "development",
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_MINUTES * 60,
+        path="/",
+    )
+
+
 @router.post("/login-json", response_model=TokenOut)
-def login_json(payload: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
+@limiter.limit("5/minute")
+def login_json(request: Request, payload: LoginIn, response: Response, db: Session = Depends(get_db)) -> TokenOut:
     if len(payload.password.encode("utf-8")) > 256:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password too long (max 256 bytes).")
 
@@ -24,12 +39,15 @@ def login_json(payload: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    return TokenOut(access_token=create_access_token(user.id))
+    token = create_access_token(user.id)
+    _set_auth_cookie(response, token)
+    return TokenOut(access_token=token, role=user.role.value)
 
 
 
 @router.post("/register", response_model=TokenOut)
-def register(payload: RegisterIn, db: Session = Depends(get_db)) -> TokenOut:
+@limiter.limit("3/minute")
+def register(request: Request, payload: RegisterIn, response: Response, db: Session = Depends(get_db)) -> TokenOut:
     if payload.role == UserRole.admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin accounts cannot be self-registered")
     existing = db.query(User).filter(User.email == payload.email).first()
@@ -52,26 +70,30 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)) -> TokenOut:
     db.commit()
 
     token = create_access_token(user.id)
-    return TokenOut(access_token=token)
+    _set_auth_cookie(response, token)
+    return TokenOut(access_token=token, role=user.role.value)
 
 
 @router.post("/login", response_model=TokenOut)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> TokenOut:
+@limiter.limit("5/minute")
+def login(request: Request, response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> TokenOut:
     # OAuth2PasswordRequestForm uses "username" field for the login identifier (we use email).
-        # bcrypt has a 72-byte limit; reject longer passwords explicitly.
-    if len(form.password.encode("utf-8")) > 72:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password too long (max 72 bytes).")
+    # Reject passwords exceeding the 256-byte limit enforced at registration.
+    if len(form.password.encode("utf-8")) > 256:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password too long (max 256 bytes).")
 
     user = db.query(User).filter(User.email == form.username).first()
     if not user or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     token = create_access_token(user.id)
-    return TokenOut(access_token=token)
+    _set_auth_cookie(response, token)
+    return TokenOut(access_token=token, role=user.role.value)
 
 
 @router.post("/google", response_model=TokenOut)
-def google_auth(payload: GoogleAuthIn, db: Session = Depends(get_db)) -> TokenOut:
+@limiter.limit("5/minute")
+def google_auth(request: Request, payload: GoogleAuthIn, response: Response, db: Session = Depends(get_db)) -> TokenOut:
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Google auth not configured")
 
@@ -110,4 +132,11 @@ def google_auth(payload: GoogleAuthIn, db: Session = Depends(get_db)) -> TokenOu
         db.commit()
 
     token = create_access_token(user.id)
-    return TokenOut(access_token=token)
+    _set_auth_cookie(response, token)
+    return TokenOut(access_token=token, role=user.role.value)
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("gc_token", path="/")
+    return {"ok": True}

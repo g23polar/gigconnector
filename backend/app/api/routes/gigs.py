@@ -346,7 +346,7 @@ def get_gig(
         )
 
     gig, aname, vname = row
-    _assert_participant(db, gig, user)
+    _assert_participant(db, gig, user)  # return value unused; read-only endpoint
     return _gig_out(gig, aname, vname)
 
 
@@ -505,7 +505,7 @@ def update_gig_status(
         )
 
     gig, aname, vname = row
-    _assert_participant(db, gig, user)
+    artist_prof, venue_prof = _assert_participant(db, gig, user)
 
     if gig.status == GigStatus.cancelled:
         raise HTTPException(
