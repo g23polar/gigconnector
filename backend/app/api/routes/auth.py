@@ -18,12 +18,13 @@ from app.schemas.auth_google import GoogleAuthIn
 
 
 def _set_auth_cookie(response: Response, token: str) -> None:
+    is_dev = settings.ENVIRONMENT == "development"
     response.set_cookie(
         key="gc_token",
         value=token,
         httponly=True,
-        secure=settings.ENVIRONMENT != "development",
-        samesite="lax",
+        secure=not is_dev,
+        samesite="lax" if is_dev else "none",
         max_age=settings.ACCESS_TOKEN_MINUTES * 60,
         path="/",
     )
