@@ -14,6 +14,10 @@ services:
         value: HS256
       - key: ACCESS_TOKEN_MINUTES
         value: "30"
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
 
   - type: web
     name: gigconnecter-frontend
